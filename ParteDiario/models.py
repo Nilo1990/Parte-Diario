@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Provincia(models.Model):
     nombre = models.CharField(max_length=50, unique=True, null=True)
@@ -14,25 +15,6 @@ class Municipio(models.Model):
     def __str__(self):
         return f"{self.provincia} - {self.nombre}"
 
-class Servicio(models.Model):
-    TIPO_SERVICIO = [
-        ('NUEVO', 'Nuevo Servicio'),
-        ('VOLTAJE', 'Cambio de Voltaje'),
-        ('LUGAR', 'Cambio de Lugar'),
-        ('ENERGIA', 'Energía Recuperada'),
-        ('QUEJAS', 'Gestión de Quejas'),
-        ('FRAUDES', 'Fraudes Detectados'),
-        ('CORTES', 'Cortes Ejecutados'),
-        ('MOROSIDAD', 'Gestión de Morosidad'),
-        ('MEDIDORES', 'Medidores Defectuosos'),
-        ('TENDEDERAS', 'Corte a Tendederas'),
-    ]
-    
-    nombre = models.CharField(max_length=50, choices=TIPO_SERVICIO, unique=True)
-    
-    def __str__(self):
-        return f"{self.get_nombre_display()}"
-
 class ParteDiario(models.Model):
     fecha = models.DateField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -40,31 +22,6 @@ class ParteDiario(models.Model):
     
     def __str__(self):
         return f"Parte {self.id} - {self.municipio} ({self.fecha})"
-
-class RegistroServicio(models.Model):
-    parte = models.ForeignKey(ParteDiario, on_delete=models.CASCADE)
-    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
-    pendientes = models.PositiveIntegerField(default=0)
-    ejecutados_dia = models.PositiveIntegerField(default=0)
-    ejecutados_mes = models.PositiveIntegerField(default=0)
-    
-    def __str__(self):
-        return f"{self.servicio} - Pend: {self.pendientes} | Ejec: {self.ejecutados_dia}/{self.ejecutados_mes}"
-
-class PendientesPorEdad(models.Model):
-    registro = models.ForeignKey(RegistroServicio, on_delete=models.CASCADE)
-    rango_edad = models.CharField(max_length=20, choices=[
-        ('>10', 'Más de 10 días'),
-        ('11-30', 'De 11 a 30 días'),
-        ('31-90', 'De 31 a 90 días'),
-        ('91-180', 'De 91 a 180 días'),
-        ('>180', 'Más de 180 días'),
-        ('>1año', 'Más de 1 año'),
-    ])
-    cantidad = models.PositiveIntegerField(default=0)
-    
-    def __str__(self):
-        return f"{self.registro} - {self.get_rango_edad_display()}: {self.cantidad}"
 
 class EnergiaRecuperada(models.Model):
     parte = models.ForeignKey(ParteDiario, on_delete=models.CASCADE)
@@ -95,3 +52,79 @@ class LogCambios(models.Model):
     
     def __str__(self):
         return f"{self.fecha} - {self.usuario} {self.get_accion_display()} {self.modelo_afectado}"
+    
+from django.db import models
+
+class ServicioRegistro(models.Model):
+    TIPO_SERVICIO = [
+        ('NUEVO', 'Nuevo Servicio'),
+        ('VOLTAJE', 'Cambio de Voltaje'),
+        ('LUGAR', 'Cambio de Lugar'),
+        ('ENERGIA', 'Energía Recuperada'),
+        ('QUEJAS', 'Gestión de Quejas'),
+        ('FRAUDES', 'Fraudes Detectados'),
+        ('CORTES', 'Cortes Ejecutados'),
+        ('MOROSIDAD', 'Gestión de Morosidad'),
+        ('MEDIDORES', 'Medidores Defectuosos'),
+        ('TENDEDERAS', 'Corte a Tendederas'),
+    ]
+    
+    parte = models.ForeignKey('ParteDiario', on_delete=models.CASCADE, related_name='servicios')
+    tipo_servicio = models.CharField(
+        max_length=20,
+        choices=TIPO_SERVICIO,
+        verbose_name="Tipo de Servicio"
+    )
+    pendientes = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Pendientes",
+        help_text="Casos pendientes al inicio del día"
+    )
+    ejecutados_dia = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ejecutados hoy",
+        help_text="Casos resueltos en el día"
+    )
+    ejecutados_mes = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ejecutados mes",
+        help_text="Acumulado mensual"
+    )
+    fecha_registro = models.DateField(
+        default=timezone.now,  # Cambiado a default en lugar de auto_now_add
+        verbose_name="Fecha de registro"
+    )
+
+    class Meta:
+        verbose_name = "Registro de Servicio"
+        verbose_name_plural = "Registros de Servicios"
+        unique_together = ('parte', 'tipo_servicio')
+        ordering = ['-fecha_registro', 'tipo_servicio']
+
+    def __str__(self):
+        return (f"{self.get_tipo_servicio_display()} | "
+                f"P: {self.pendientes} | "
+                f"Día: {self.ejecutados_dia} | "
+                f"Mes: {self.ejecutados_mes}")
+
+    def save(self, *args, **kwargs):
+        """Actualiza automáticamente el acumulado mensual"""
+        # Asegurarse de que la fecha está establecida
+        if not self.fecha_registro:
+            self.fecha_registro = timezone.now().date()
+            
+        # Solo para nuevos registros
+        if not self.pk:
+            # Buscar registros del mismo mes y servicio
+            ultimo_registro = ServicioRegistro.objects.filter(
+                tipo_servicio=self.tipo_servicio,
+                fecha_registro__year=self.fecha_registro.year,
+                fecha_registro__month=self.fecha_registro.month
+            ).order_by('-fecha_registro').first()
+            
+            if ultimo_registro:
+                self.ejecutados_mes = ultimo_registro.ejecutados_mes + self.ejecutados_dia
+            else:
+                self.ejecutados_mes = self.ejecutados_dia
+                
+        super().save(*args, **kwargs)

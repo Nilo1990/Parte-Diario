@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from .models import Provincia, Municipio, Servicio
+from .models import Provincia, Municipio
 from django.contrib.auth import logout
 from django.conf import settings
 
