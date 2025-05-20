@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Eliminar Provincia
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>¿Estás seguro de que deseas eliminar la provincia <strong>{{ object.nombre }}</strong>?</p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'provincia-list' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

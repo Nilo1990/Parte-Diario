@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                    {% if object %}Editar{% else %}Crear{% endif %} Municipio
+                </h5>
+            </div>
+            <form method="post">
+                <div class="card-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_nombre" class="form-label">Nombre del Municipio</label>
+                        {{ form.nombre }}
+                        {% if form.nombre.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.nombre.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{% url 'municipio-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
