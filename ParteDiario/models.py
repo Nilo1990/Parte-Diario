@@ -39,22 +39,6 @@ class Queja(models.Model):
     def __str__(self):
         return f"Quejas: {self.recibidas} recibidas | {self.resueltas} resueltas"
 
-class LogCambios(models.Model):
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    modelo_afectado = models.CharField(max_length=50)
-    accion = models.CharField(max_length=10, choices=[
-        ('CREATE', 'Creación'),
-        ('UPDATE', 'Actualización'),
-        ('DELETE', 'Eliminación'),
-    ])
-    fecha = models.DateTimeField(auto_now_add=True)
-    detalles = models.TextField()
-    
-    def __str__(self):
-        return f"{self.fecha} - {self.usuario} {self.get_accion_display()} {self.modelo_afectado}"
-    
-from django.db import models
-
 class ServicioRegistro(models.Model):
     TIPO_SERVICIO = [
         ('NUEVO', 'Nuevo Servicio'),

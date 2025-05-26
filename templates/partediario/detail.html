@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-primary"></i>Detalle del Parte Diario
+                </h3>
+                <div>
+                    <a href="{% url 'partediario-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Volver al Listado
+                    </a>
+                </div>
+            </div>
+            <hr class="mt-2 mb-4">
+            
+            <!-- Sistema de Pestañas -->
+            <div class="tabs">
+                <!-- Encabezado de pestañas -->
+                <div class="tab-header">
+                    <button class="tab-btn active" onclick="openTab(event, 'tab-info')">
+                        <i class="fas fa-info-circle me-1"></i> Información
+                    </button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-servicios')">
+                        <i class="fas fa-tools me-1"></i> Servicios
+                    </button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-energia')">
+                        <i class="fas fa-bolt me-1"></i> Energía
+                    </button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-quejas')">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Quejas
+                    </button>
+                </div>
+                
+                <!-- Contenido de pestañas -->
+                
+                <!-- Pestaña 1: Información Básica -->
+                <div id="tab-info" class="tab-content active">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Columna 1 -->
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <h6 class="text-muted mb-1">Fecha</h6>
+                                        <p class="fs-5">{{ parte.fecha|date:"l, d F Y" }}</p>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <h6 class="text-muted mb-1">Registrado por</h6>
+                                        <p class="fs-5">
+                                            <i class="fas fa-user-circle me-2 text-secondary"></i>
+                                            {{ parte.usuario.get_full_name|default:parte.usuario.username }}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Columna 2 -->
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <h6 class="text-muted mb-1">Ubicación</h6>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-map-marker-alt me-2 text-danger fs-4"></i>
+                                            <div>
+                                                <p class="mb-0 fs-5">{{ parte.municipio.nombre }}</p>
+                                                <small class="text-muted">{{ parte.municipio.provincia.nombre }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <h6 class="text-muted mb-1">Estado</h6>
+                                        <span class="badge bg-success fs-6">Completado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña 2: Servicios -->
+                <div id="tab-servicios" class="tab-content">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4"><i class="fas fa-tools me-2"></i>Registro de Servicios</h5>
+                            {% if servicios %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Tipo de Servicio</th>
+                                            <th>Pendientes</th>
+                                            <th>Ejecutados (Día)</th>
+                                            <th>Ejecutados (Mes)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for servicio in servicios %}
+                                        <tr>
+                                            <td>{{ servicio.get_tipo_servicio_display }}</td>
+                                            <td>{{ servicio.pendientes }}</td>
+                                            <td>{{ servicio.ejecutados_dia }}</td>
+                                            <td>{{ servicio.ejecutados_mes }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                No hay registros de servicios para este parte.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña 3: Energía -->
+                <div id="tab-energia" class="tab-content">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4"><i class="fas fa-bolt me-2"></i>Energía Recuperada</h5>
+                            {% if energia %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">Plan (MWh)</h6>
+                                            <h3 class="text-primary">{{ energia.plan_mwh }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">Real (MWh)</h6>
+                                            <h3 class="text-primary">{{ energia.real_mwh }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">Diferencia</h6>
+                                            <h3 class="{% if energia.diferencia >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {{ energia.diferencia }} MWh
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                No hay datos de energía recuperada para este parte.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña 4: Quejas -->
+                <div id="tab-quejas" class="tab-content">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4"><i class="fas fa-exclamation-triangle me-2"></i>Gestión de Quejas</h5>
+                            {% if quejas %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">Recibidas</h6>
+                                            <h3 class="text-primary">{{ quejas.recibidas }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h6 class="text-muted">Resueltas</h6>
+                                            <h3 class="text-success">{{ quejas.resueltas }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <h6>Porcentaje de resolución</h6>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {% widthratio quejas.resueltas quejas.recibidas 100 %}%" 
+                                         aria-valuenow="{% widthratio quejas.resueltas quejas.recibidas 100 %}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {% widthratio quejas.resueltas quejas.recibidas 100 %}%
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                No hay registros de quejas para este parte.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección de Acciones -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{% url 'partediario-update' parte.pk %}" class="btn btn-warning px-4">
+                            <i class="fas fa-edit me-2"></i> Editar Parte
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{% url 'partediario-delete' parte.pk %}" class="btn btn-danger px-4">
+                            <i class="fas fa-trash-alt me-2"></i> Eliminar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos para el sistema de pestañas */
+    .tabs {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .tab-header {
+        display: flex;
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: -1px;
+    }
+    
+    .tab-btn {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s;
+        border-radius: 5px 5px 0 0;
+        margin-right: 3px;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .tab-btn:hover {
+        background: #f8f9fa;
+        color: #495057;
+    }
+    
+    .tab-btn.active {
+        background: white;
+        color: #2c3e50;
+        border-bottom: 3px solid #2c3e50;
+        font-weight: 600;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 0;
+        animation: fadeEffect 0.3s;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeEffect {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openTab(evt, tabId) {
+    // Ocultar todos los contenidos de pestañas
+    var tabContents = document.getElementsByClassName("tab-content");
+    for (var i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove("active");
+    }
+    
+    // Desactivar todos los botones de pestañas
+    var tabButtons = document.getElementsByClassName("tab-btn");
+    for (var i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove("active");
+    }
+    
+    // Mostrar la pestaña actual y activar el botón
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+
+// Inicializar tooltips
+$(document).ready(function() {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Partes Diarios</h1>
+<a href="{% url 'partediario-create' %}" class="btn btn-primary mb-3">Nuevo Parte</a>
+<table class="table table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Municipio</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for parte in partes %}
+        <tr>
+            <td>{{ parte.fecha|date:"d/m/Y" }}</td>
+            <td>{{ parte.usuario.get_full_name|default:parte.usuario.username }}</td>
+            <td>{{ parte.municipio.nombre }}</td>
+            <td>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'partediario-detail' parte.pk %}" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> Detalles
+                    </a>
+                    <a href="{% url 'partediario-update' parte.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="{% url 'partediario-delete' parte.pk %}" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No hay partes registrados</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

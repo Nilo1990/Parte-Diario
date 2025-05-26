@@ -1,9 +1,15 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from .views import (MunicipioListView, MunicipioCreateView, 
-                   MunicipioUpdateView, MunicipioDeleteView,
-                   dashboard, home_redirect, custom_logout, ProvinciaListView, ProvinciaCreateView, 
-                    ProvinciaUpdateView, ProvinciaDeleteView) 
+                MunicipioUpdateView, MunicipioDeleteView,
+                dashboard, home_redirect, custom_logout, ProvinciaListView, ProvinciaCreateView, 
+                ProvinciaUpdateView, ProvinciaDeleteView, ParteDiarioListView, ParteDiarioCreateView,
+                ParteDiarioUpdateView, ParteDiarioDeleteView, ParteDiarioDetailView,
+                EnergiaRecuperadaListView, EnergiaRecuperadaCreateView, 
+                    EnergiaRecuperadaUpdateView, EnergiaRecuperadaDeleteView,
+                    EnergiaRecuperadaDetailView, QuejaListView, QuejaCreateView, 
+                    QuejaUpdateView, QuejaDeleteView,
+                    QuejaDetailView) 
 
 urlpatterns = [
     path('', home_redirect, name='home-redirect'),
@@ -22,5 +28,23 @@ urlpatterns = [
     path('provincias/nuevo/', ProvinciaCreateView.as_view(), name='provincia-create'),
     path('provincias/editar/<int:pk>/', ProvinciaUpdateView.as_view(), name='provincia-update'),
     path('provincias/eliminar/<int:pk>/', ProvinciaDeleteView.as_view(), name='provincia-delete'),
+
+    path('partediario/', ParteDiarioListView.as_view(), name='partediario-list'),
+    path('partediario/nuevo/', ParteDiarioCreateView.as_view(), name='partediario-create'),
+    path('partediario/editar/<int:pk>/', ParteDiarioUpdateView.as_view(), name='partediario-update'),
+    path('partediario/eliminar/<int:pk>/', ParteDiarioDeleteView.as_view(), name='partediario-delete'),
+    path('parte/<int:pk>/', ParteDiarioDetailView.as_view(), name='partediario-detail'),
+    
+    path('energia/', EnergiaRecuperadaListView.as_view(), name='energia-list'),
+    path('energia/nuevo/', EnergiaRecuperadaCreateView.as_view(), name='energia-create'),
+    path('energia/<int:pk>/', EnergiaRecuperadaDetailView.as_view(), name='energia-detail'),
+    path('energia/<int:pk>/editar/', EnergiaRecuperadaUpdateView.as_view(), name='energia-update'),
+    path('energia/<int:pk>/eliminar/', EnergiaRecuperadaDeleteView.as_view(), name='energia-delete'),
+
+    path('quejas/', QuejaListView.as_view(), name='queja-list'),
+    path('quejas/nuevo/', QuejaCreateView.as_view(), name='queja-create'),
+    path('quejas/<int:pk>/', QuejaDetailView.as_view(), name='queja-detail'),
+    path('quejas/<int:pk>/editar/', QuejaUpdateView.as_view(), name='queja-update'),
+    path('quejas/<int:pk>/eliminar/', QuejaDeleteView.as_view(), name='queja-delete'),
     
 ]
