@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-4">Registros de Servicios</h3>
+    <a href="{% url 'servicio-create' %}" class="btn btn-primary mb-3">
+        <i class="fas fa-plus"></i> Nuevo Servicio
+    </a>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Parte</th>
+                        <th>Pendientes</th>
+                        <th>Ejecutados (Día)</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for servicio in servicios %}
+                    <tr>
+                        <td>{{ servicio.get_tipo_servicio_display }}</td>
+                        <td>{{ servicio.parte }}</td>
+                        <td>{{ servicio.pendientes }}</td>
+                        <td>{{ servicio.ejecutados_dia }}</td>
+                        <td>{{ servicio.fecha_registro|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Botón Detalle -->
+                                <a href="{% url 'servicio-detail' servicio.pk %}" class="btn btn-info" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <!-- Botón Editar -->
+                                <a href="{% url 'servicio-update' servicio.pk %}" class="btn btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <!-- Botón Eliminar (con modal) -->
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal{{ servicio.pk }}" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Modal de Confirmación de Eliminación -->
+                            <div class="modal fade" id="deleteModal{{ servicio.pk }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            ¿Estás seguro de eliminar el servicio:<br>
+                                            <strong>{{ servicio.get_tipo_servicio_display }}</strong> del {{ servicio.fecha_registro|date:"d/m/Y" }}?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                            <form action="{% url 'servicio-delete' servicio.pk %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No hay registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Opcional: Cierra automáticamente los modales después de 5 segundos si hay errores
+document.addEventListener('DOMContentLoaded', function() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (modal.classList.contains('show')) {
+            setTimeout(() => {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                modalInstance.hide();
+            }, 5000);
+        }
+    });
+});
+</script>
+{% endblock %}

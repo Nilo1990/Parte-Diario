@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-0 text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación
+            </h3>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">¿Estás seguro de eliminar este registro?</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <strong>Servicio:</strong> {{ object.get_tipo_servicio_display }}<br>
+                <strong>Parte:</strong> {{ object.parte }}<br>
+                <strong>Fecha:</strong> {{ object.fecha_registro|date:"d/m/Y" }}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Sí, Eliminar
+                </button>
+                <a href="{% url 'servicio-detail' object.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -82,7 +82,13 @@
                 <div id="tab-servicios" class="tab-content">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title mb-4"><i class="fas fa-tools me-2"></i>Registro de Servicios</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0"><i class="fas fa-tools me-2"></i>Registro de Servicios</h5>
+                                <a href="{% url 'servicio-create' %}?parte={{ parte.pk }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Nuevo Servicio
+                                </a>
+                            </div>
+                            
                             {% if servicios %}
                             <div class="table-responsive">
                                 <table class="table table-striped">
@@ -92,6 +98,7 @@
                                             <th>Pendientes</th>
                                             <th>Ejecutados (Día)</th>
                                             <th>Ejecutados (Mes)</th>
+                                            <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -101,6 +108,47 @@
                                             <td>{{ servicio.pendientes }}</td>
                                             <td>{{ servicio.ejecutados_dia }}</td>
                                             <td>{{ servicio.ejecutados_mes }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'servicio-detail' servicio.pk %}" class="btn btn-info" title="Detalle">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'servicio-update' servicio.pk %}" class="btn btn-warning" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button class="btn btn-danger" title="Eliminar" data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteServicioModal{{ servicio.pk }}">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Modal Eliminar Servicio -->
+                                                <div class="modal fade" id="deleteServicioModal{{ servicio.pk }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                ¿Estás seguro de eliminar el servicio de tipo:<br>
+                                                                <strong>{{ servicio.get_tipo_servicio_display }}</strong>?
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                    <i class="fas fa-times"></i> Cancelar
+                                                                </button>
+                                                                <form action="{% url 'servicio-delete' servicio.pk %}" method="post">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-danger">
+                                                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -109,6 +157,9 @@
                             {% else %}
                             <div class="alert alert-info">
                                 No hay registros de servicios para este parte.
+                                <a href="{% url 'servicio-create' %}?parte={{ parte.pk }}" class="alert-link">
+                                    Crear nuevo servicio
+                                </a>
                             </div>
                             {% endif %}
                         </div>
@@ -119,7 +170,24 @@
                 <div id="tab-energia" class="tab-content">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title mb-4"><i class="fas fa-bolt me-2"></i>Energía Recuperada</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0"><i class="fas fa-bolt me-2"></i>Energía Recuperada</h5>
+                                {% if energia %}
+                                <div>
+                                    <a href="{% url 'energia-update' energia.pk %}" class="btn btn-warning btn-sm me-2">
+                                        <i class="fas fa-edit me-1"></i> Editar
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteEnergiaModal">
+                                        <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                    </button>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'energia-create' %}?parte={{ parte.pk }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Registrar Energía
+                                </a>
+                                {% endif %}
+                            </div>
+                            
                             {% if energia %}
                             <div class="row">
                                 <div class="col-md-4">
@@ -149,9 +217,39 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Modal Eliminar Energía -->
+                            <div class="modal fade" id="deleteEnergiaModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            ¿Estás seguro de eliminar el registro de energía recuperada?<br>
+                                            <strong>Parte:</strong> {{ parte.municipio.nombre }} - {{ parte.fecha|date:"d/m/Y" }}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                            <form action="{% url 'energia-delete' energia.pk %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% else %}
                             <div class="alert alert-info">
                                 No hay datos de energía recuperada para este parte.
+                                <a href="{% url 'energia-create' %}?parte={{ parte.pk }}" class="alert-link">
+                                    Registrar datos de energía
+                                </a>
                             </div>
                             {% endif %}
                         </div>
@@ -162,7 +260,24 @@
                 <div id="tab-quejas" class="tab-content">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title mb-4"><i class="fas fa-exclamation-triangle me-2"></i>Gestión de Quejas</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Gestión de Quejas</h5>
+                                {% if quejas %}
+                                <div>
+                                    <a href="{% url 'queja-update' quejas.pk %}" class="btn btn-warning btn-sm me-2">
+                                        <i class="fas fa-edit me-1"></i> Editar
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteQuejaModal">
+                                        <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                    </button>
+                                </div>
+                                {% else %}
+                                <a href="{% url 'queja-create' %}?parte={{ parte.pk }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Registrar Quejas
+                                </a>
+                                {% endif %}
+                            </div>
+                            
                             {% if quejas %}
                             <div class="row">
                                 <div class="col-md-6">
@@ -194,9 +309,39 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Modal Eliminar Queja -->
+                            <div class="modal fade" id="deleteQuejaModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            ¿Estás seguro de eliminar el registro de quejas?<br>
+                                            <strong>Parte:</strong> {{ parte.municipio.nombre }} - {{ parte.fecha|date:"d/m/Y" }}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                            <form action="{% url 'queja-delete' quejas.pk %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% else %}
                             <div class="alert alert-info">
                                 No hay registros de quejas para este parte.
+                                <a href="{% url 'queja-create' %}?parte={{ parte.pk }}" class="alert-link">
+                                    Registrar quejas
+                                </a>
                             </div>
                             {% endif %}
                         </div>
@@ -204,7 +349,7 @@
                 </div>
             </div>
             
-            <!-- Sección de Acciones -->
+            <!-- Sección de Acciones del Parte -->
             <div class="mt-4">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -213,9 +358,43 @@
                         </a>
                     </div>
                     <div>
-                        <a href="{% url 'partediario-delete' parte.pk %}" class="btn btn-danger px-4">
-                            <i class="fas fa-trash-alt me-2"></i> Eliminar
-                        </a>
+                        <button class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteParteModal">
+                            <i class="fas fa-trash-alt me-2"></i> Eliminar Parte
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Eliminar Parte -->
+            <div class="modal fade" id="deleteParteModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">Confirmar Eliminación</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de eliminar este parte diario completo?</p>
+                            <div class="alert alert-warning">
+                                <strong>¡Advertencia!</strong> Esta acción eliminará también todos los registros asociados:
+                                <ul class="mt-2 mb-0">
+                                    <li>Servicios registrados</li>
+                                    <li>Energía recuperada</li>
+                                    <li>Registro de quejas</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <form action="{% url 'partediario-delete' parte.pk %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Eliminar Todo
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -234,6 +413,8 @@
         display: flex;
         border-bottom: 2px solid #dee2e6;
         margin-bottom: -1px;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     
     .tab-btn {
@@ -275,6 +456,20 @@
         from {opacity: 0;}
         to {opacity: 1;}
     }
+    
+    /* Mejoras para tablas */
+    .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+    }
 </style>
 
 {% endblock %}
@@ -300,8 +495,11 @@ function openTab(evt, tabId) {
 }
 
 // Inicializar tooltips
-$(document).ready(function() {
-    $('[data-toggle="tooltip"]').tooltip();
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });
 </script>
 {% endblock %}

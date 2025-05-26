@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-0">
+                <i class="fas fa-tasks me-2"></i> Detalle de Servicio
+            </h3>
+            <small class="text-muted">{{ servicio.get_tipo_servicio_display }}</small>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-primary">Información Básica</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Parte Diario:</strong> {{ servicio.parte }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tipo:</strong> {{ servicio.get_tipo_servicio_display }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Fecha:</strong> {{ servicio.fecha_registro|date:"d/m/Y" }}
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5 class="text-primary">Estadísticas</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Pendientes:</strong> 
+                            <span class="badge bg-warning">{{ servicio.pendientes }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Ejecutados (Día):</strong> 
+                            <span class="badge bg-success">{{ servicio.ejecutados_dia }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Ejecutados (Mes):</strong> 
+                            <span class="badge bg-info">{{ servicio.ejecutados_mes }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'servicio-update' servicio.pk %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a href="{% url 'servicio-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

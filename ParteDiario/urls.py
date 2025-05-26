@@ -6,10 +6,12 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 ProvinciaUpdateView, ProvinciaDeleteView, ParteDiarioListView, ParteDiarioCreateView,
                 ParteDiarioUpdateView, ParteDiarioDeleteView, ParteDiarioDetailView,
                 EnergiaRecuperadaListView, EnergiaRecuperadaCreateView, 
-                    EnergiaRecuperadaUpdateView, EnergiaRecuperadaDeleteView,
-                    EnergiaRecuperadaDetailView, QuejaListView, QuejaCreateView, 
-                    QuejaUpdateView, QuejaDeleteView,
-                    QuejaDetailView) 
+                EnergiaRecuperadaUpdateView, EnergiaRecuperadaDeleteView,
+                EnergiaRecuperadaDetailView, QuejaListView, QuejaCreateView, 
+                QuejaUpdateView, QuejaDeleteView,
+                QuejaDetailView, ServicioRegistroListView, ServicioRegistroCreateView, 
+                ServicioRegistroUpdateView, ServicioRegistroDeleteView,
+                ServicioRegistroDetailView) 
 
 urlpatterns = [
     path('', home_redirect, name='home-redirect'),
@@ -47,4 +49,9 @@ urlpatterns = [
     path('quejas/<int:pk>/editar/', QuejaUpdateView.as_view(), name='queja-update'),
     path('quejas/<int:pk>/eliminar/', QuejaDeleteView.as_view(), name='queja-delete'),
     
+    path('servicios/', ServicioRegistroListView.as_view(), name='servicio-list'),
+    path('servicios/nuevo/', ServicioRegistroCreateView.as_view(), name='servicio-create'),
+    path('servicios/<int:pk>/', ServicioRegistroDetailView.as_view(), name='servicio-detail'),
+    path('servicios/<int:pk>/editar/', ServicioRegistroUpdateView.as_view(), name='servicio-update'),
+    path('servicios/<int:pk>/eliminar/', ServicioRegistroDeleteView.as_view(), name='servicio-delete'),
 ]

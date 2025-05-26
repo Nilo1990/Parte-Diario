@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro
 from django.contrib.auth import logout
 from django.conf import settings
 from django.contrib import messages
@@ -191,3 +191,38 @@ class QuejaDetailView(LoginRequiredMixin, DetailView):
         context['porcentaje_resueltas'] = (self.object.resueltas / self.object.recibidas) * 100 if self.object.recibidas > 0 else 0
         return context
 
+class ServicioRegistroListView(LoginRequiredMixin, ListView):
+    model = ServicioRegistro
+    template_name = 'servicios/list.html'
+    context_object_name = 'servicios'
+    ordering = ['-fecha_registro']
+    paginate_by = 10
+
+class ServicioRegistroCreateView(LoginRequiredMixin, CreateView):
+    model = ServicioRegistro
+    template_name = 'servicios/form.html'
+    fields = ['parte', 'tipo_servicio', 'pendientes', 'ejecutados_dia', 'ejecutados_mes', 'fecha_registro']
+    success_url = reverse_lazy('servicio-list')
+
+    def form_valid(self, form):
+        # Validación personalizada (ejemplo: no permitir pendientes negativos)
+        if form.cleaned_data['pendientes'] < 0:
+            form.add_error('pendientes', "Los pendientes no pueden ser negativos")
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
+class ServicioRegistroUpdateView(LoginRequiredMixin, UpdateView):
+    model = ServicioRegistro
+    template_name = 'servicios/form.html'
+    fields = ['parte', 'tipo_servicio', 'pendientes', 'ejecutados_dia', 'ejecutados_mes', 'fecha_registro']
+    success_url = reverse_lazy('servicio-list')
+
+class ServicioRegistroDeleteView(LoginRequiredMixin, DeleteView):
+    model = ServicioRegistro
+    template_name = 'servicios/confirm_delete.html'
+    success_url = reverse_lazy('servicio-list')
+
+class ServicioRegistroDetailView(LoginRequiredMixin, DetailView):
+    model = ServicioRegistro
+    template_name = 'servicios/detail.html'
+    context_object_name = 'servicio'
