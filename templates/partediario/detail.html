@@ -257,96 +257,98 @@
                 </div>
                 
                 <!-- Pestaña 4: Quejas -->
-                <div id="tab-quejas" class="tab-content">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Gestión de Quejas</h5>
-                                {% if quejas %}
-                                <div>
-                                    <a href="{% url 'queja-update' quejas.pk %}" class="btn btn-warning btn-sm me-2">
-                                        <i class="fas fa-edit me-1"></i> Editar
+<div id="tab-quejas" class="tab-content">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Gestión de Quejas
+                </h5>
+                <a href="{% url 'queja-create' %}?parte={{ parte.pk }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Nueva Queja
+                </a>
+            </div>
+            
+            {% if quejas %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Recibidas</th>
+                            <th>Resueltas</th>
+                            <th>% Resolución</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for queja in quejas %}
+                        <tr>
+                            <td>Queja #{{ forloop.counter }}</td>
+                            <td>{{ queja.recibidas }}</td>
+                            <td>{{ queja.resueltas }}</td>
+                            <td>
+                                {% widthratio queja.resueltas queja.recibidas 100 %}%
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'queja-update' queja.pk %}" class="btn btn-warning">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteQuejaModal">
-                                        <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                    <button class="btn btn-danger" data-bs-toggle="modal" 
+                                        data-bs-target="#deleteQuejaModal{{ queja.pk }}">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
-                                {% else %}
-                                <a href="{% url 'queja-create' %}?parte={{ parte.pk }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-plus me-1"></i> Registrar Quejas
-                                </a>
-                                {% endif %}
-                            </div>
-                            
-                            {% if quejas %}
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card bg-light mb-3">
-                                        <div class="card-body text-center">
-                                            <h6 class="text-muted">Recibidas</h6>
-                                            <h3 class="text-primary">{{ quejas.recibidas }}</h3>
+                                
+                                <!-- Modal Eliminar -->
+                                <div class="modal fade" id="deleteQuejaModal{{ queja.pk }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                ¿Eliminar registro del {{ queja.parte.fecha|date:"d/m/Y" }}?<br>
+                                                <strong>Recibidas:</strong> {{ queja.recibidas }}<br>
+                                                <strong>Resueltas:</strong> {{ queja.resueltas }}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <form action="{% url 'queja-delete' queja.pk %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light mb-3">
-                                        <div class="card-body text-center">
-                                            <h6 class="text-muted">Resueltas</h6>
-                                            <h3 class="text-success">{{ quejas.resueltas }}</h3>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <h6>Porcentaje de resolución</h6>
-                                <div class="progress" style="height: 25px;">
-                                    <div class="progress-bar bg-success" role="progressbar" 
-                                         style="width: {% widthratio quejas.resueltas quejas.recibidas 100 %}%" 
-                                         aria-valuenow="{% widthratio quejas.resueltas quejas.recibidas 100 %}" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                        {% widthratio quejas.resueltas quejas.recibidas 100 %}%
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Modal Eliminar Queja -->
-                            <div class="modal fade" id="deleteQuejaModal" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">Confirmar Eliminación</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            ¿Estás seguro de eliminar el registro de quejas?<br>
-                                            <strong>Parte:</strong> {{ parte.municipio.nombre }} - {{ parte.fecha|date:"d/m/Y" }}
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                <i class="fas fa-times"></i> Cancelar
-                                            </button>
-                                            <form action="{% url 'queja-delete' quejas.pk %}" method="post">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fas fa-trash-alt"></i> Eliminar
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info">
-                                No hay registros de quejas para este parte.
-                                <a href="{% url 'queja-create' %}?parte={{ parte.pk }}" class="alert-link">
-                                    Registrar quejas
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th>Total</th>
+                            <th>{{ total_quejas_recibidas }}</th>
+                            <th>{{ total_quejas_resueltas }}</th>
+                            <th>
+                                {% widthratio total_quejas_resueltas total_quejas_recibidas 100 %}%
+                            </th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No hay registros de quejas para este parte.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
             </div>
             
             <!-- Sección de Acciones del Parte -->

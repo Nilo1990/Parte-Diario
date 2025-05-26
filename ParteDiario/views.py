@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
@@ -105,6 +106,34 @@ class ParteDiarioDetailView(LoginRequiredMixin, DetailView):
     model = ParteDiario
     template_name = 'partediario/detail.html'
     context_object_name = 'parte'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        parte = self.object
+        
+        # 1. Servicios Registrados (pueden ser múltiples)
+        context['servicios'] = ServicioRegistro.objects.filter(parte=parte)
+        
+        # 2. Energía Recuperada (uno por parte)
+        try:
+            context['energia'] = EnergiaRecuperada.objects.get(parte=parte)
+            context['energia'].diferencia = context['energia'].real_mwh - context['energia'].plan_mwh
+        except EnergiaRecuperada.DoesNotExist:
+            context['energia'] = None
+        
+        # 3. Quejas (ahora manejamos múltiples registros)
+        quejas = Queja.objects.filter(parte=parte)
+        context['quejas'] = quejas
+        
+        # Calculamos totales de quejas
+        if quejas.exists():
+            context['total_quejas_recibidas'] = quejas.aggregate(Sum('recibidas'))['recibidas__sum']
+            context['total_quejas_resueltas'] = quejas.aggregate(Sum('resueltas'))['resueltas__sum']
+        else:
+            context['total_quejas_recibidas'] = 0
+            context['total_quejas_resueltas'] = 0
+        
+        return context
 
 
 class EnergiaRecuperadaListView(LoginRequiredMixin, ListView):
