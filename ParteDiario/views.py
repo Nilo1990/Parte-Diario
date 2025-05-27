@@ -4,11 +4,12 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador
 from django.contrib.auth import logout
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from .forms import ContactoAdminForm
 
 def home_redirect(request):
     """Redirige a la raíz del sistema según autenticación"""
@@ -255,3 +256,31 @@ class ServicioRegistroDetailView(LoginRequiredMixin, DetailView):
     model = ServicioRegistro
     template_name = 'servicios/detail.html'
     context_object_name = 'servicio'
+
+class ContactoAdminView(LoginRequiredMixin, CreateView):
+    model = ContactoAdministrador
+    form_class = ContactoAdminForm
+    template_name = 'contacto/form.html'
+    success_url = reverse_lazy('dashboard')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            "Tu mensaje ha sido enviado al administrador. Recibirás una respuesta pronto."
+        )
+        return response
+
+class ContactoAdminListView(LoginRequiredMixin, ListView):
+    model = ContactoAdministrador
+    template_name = 'contacto/list.html'
+    context_object_name = 'contactos'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return ContactoAdministrador.objects.filter(usuario=self.request.user).order_by('-fecha')

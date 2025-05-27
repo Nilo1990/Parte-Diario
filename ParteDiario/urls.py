@@ -11,7 +11,7 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 QuejaUpdateView, QuejaDeleteView,
                 QuejaDetailView, ServicioRegistroListView, ServicioRegistroCreateView, 
                 ServicioRegistroUpdateView, ServicioRegistroDeleteView,
-                ServicioRegistroDetailView) 
+                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView) 
 
 urlpatterns = [
     path('', home_redirect, name='home-redirect'),
@@ -54,4 +54,9 @@ urlpatterns = [
     path('servicios/<int:pk>/', ServicioRegistroDetailView.as_view(), name='servicio-detail'),
     path('servicios/<int:pk>/editar/', ServicioRegistroUpdateView.as_view(), name='servicio-update'),
     path('servicios/<int:pk>/eliminar/', ServicioRegistroDeleteView.as_view(), name='servicio-delete'),
+
+    path('contacto/', ContactoAdminView.as_view(), name='contacto-admin'),
+    path('contacto/historial/', ContactoAdminListView.as_view(), name='contacto-list'),
+    
+    
 ]

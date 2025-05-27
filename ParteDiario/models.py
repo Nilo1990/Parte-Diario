@@ -112,3 +112,38 @@ class ServicioRegistro(models.Model):
                 self.ejecutados_mes = self.ejecutados_dia
                 
         super().save(*args, **kwargs)
+
+class ContactoAdministrador(models.Model):
+    TIPO_CONSULTA = [
+        ('ERROR', 'Reportar un error'),
+        ('SUGERENCIA', 'Hacer una sugerencia'),
+        ('CONSULTA', 'Realizar una consulta'),
+        ('OTRO', 'Otro asunto'),
+    ]
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contactos')
+    fecha = models.DateTimeField(auto_now_add=True)
+    tipo_consulta = models.CharField(
+        max_length=20,
+        choices=TIPO_CONSULTA,
+        default='CONSULTA',
+        verbose_name="Tipo de consulta"
+    )
+    asunto = models.CharField(max_length=100, verbose_name="Asunto")
+    mensaje = models.TextField(verbose_name="Mensaje detallado")
+    adjunto = models.FileField(
+        upload_to='contacto/adjuntos/',
+        null=True,
+        blank=True,
+        verbose_name="Adjuntar archivo (opcional)"
+    )
+    respondido = models.BooleanField(default=False, verbose_name="¿Respondido?")
+    notas_admin = models.TextField(blank=True, null=True, verbose_name="Notas del administrador")
+
+    class Meta:
+        verbose_name = "Contacto con Administrador"
+        verbose_name_plural = "Contactos con Administradores"
+        ordering = ['-fecha', 'respondido']
+
+    def __str__(self):
+        return f"Contacto de {self.usuario.username} - {self.get_tipo_consulta_display()} ({self.fecha.date()})"
