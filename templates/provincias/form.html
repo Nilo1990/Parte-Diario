@@ -4,8 +4,8 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-header">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
                     <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
                     {% if object %}Editar{% else %}Crear{% endif %} Provincia
@@ -15,17 +15,17 @@
                 <div class="card-body">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="id_nombre" class="form-label">Nombre</label>
+                        <label for="id_nombre" class="form-label fw-semibold">Nombre</label>
                         {{ form.nombre }}
                         {% if form.nombre.errors %}
                         <div class="invalid-feedback d-block">
-                            {{ form.nombre.errors.0 }}
+                            <i class="fas fa-exclamation-circle me-1"></i> {{ form.nombre.errors.0 }}
                         </div>
                         {% endif %}
                     </div>
                 </div>
-                <div class="card-footer text-end">
-                    <a href="{% url 'provincia-list' %}" class="btn btn-secondary">
+                <div class="card-footer bg-light border-0 d-flex justify-content-end">
+                    <a href="{% url 'provincia-list' %}" class="btn btn-outline-secondary me-2">
                         <i class="fas fa-times me-1"></i> Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary">

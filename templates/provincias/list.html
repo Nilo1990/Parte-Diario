@@ -2,21 +2,21 @@
 {% load static %}
 
 {% block content %}
-<div class="card shadow">
-    <div class="card-header d-flex justify-content-between align-items-center">
+<div class="card border-0 shadow-lg">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-map me-2"></i> Provincias</h5>
-        <a href="{% url 'provincia-create' %}" class="btn btn-primary">
+        <a href="{% url 'provincia-create' %}" class="btn btn-light text-primary">
             <i class="fas fa-plus me-1"></i> Nueva Provincia
         </a>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th class="text-end">Acciones</th>
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr class="bg-light">
+                        <th class="fw-semibold">ID</th>
+                        <th class="fw-semibold">Nombre</th>
+                        <th class="text-end fw-semibold">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,9 +25,9 @@
                         <td>{{ provincia.id }}</td>
                         <td>{{ provincia.nombre }}</td>
                         <td class="text-end">
-                            <div class="btn-group btn-group-sm">
+                            <div class="btn-group btn-group-sm shadow-sm">
                                 <a href="{% url 'provincia-update' provincia.id %}" 
-                                   class="btn btn-outline-warning" title="Editar">
+                                   class="btn btn-outline-primary" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <a href="{% url 'provincia-delete' provincia.id %}" 
@@ -40,6 +40,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-3"></i><br>
                             No hay provincias registradas
                         </td>
                     </tr>
@@ -51,7 +52,7 @@
         {% if is_paginated %}
         <div class="d-flex justify-content-center mt-4">
             <nav aria-label="Paginación">
-                <ul class="pagination">
+                <ul class="pagination shadow-sm">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
                         <a class="page-link" href="?page=1">&laquo; Primera</a>
@@ -62,7 +63,7 @@
                     {% endif %}
                     
                     <li class="page-item active">
-                        <span class="page-link">
+                        <span class="page-link bg-primary border-primary">
                             Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
                         </span>
                     </li>

@@ -13,8 +13,19 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 ServicioRegistroUpdateView, ServicioRegistroDeleteView,
                 ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView) 
 
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views.generic.base import RedirectView
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+
 urlpatterns = [
     path('', home_redirect, name='home-redirect'),
+
+    path('favicon.ico', RedirectView.as_view(
+        url=staticfiles_storage.url('img/favicon.ico')
+    )),
 
     path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('accounts/logout/', custom_logout, name='logout'), 
@@ -57,6 +68,11 @@ urlpatterns = [
 
     path('contacto/', ContactoAdminView.as_view(), name='contacto-admin'),
     path('contacto/historial/', ContactoAdminListView.as_view(), name='contacto-list'),
-    
+
+       
     
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

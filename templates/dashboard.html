@@ -7,28 +7,48 @@
     .card {
         border: none;
         transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.03);
     }
     
     .card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
     
     .card-header {
         border-bottom: none;
         font-weight: 600;
         letter-spacing: 0.5px;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+    }
+    
+    .card-header.bg-success {
+        background-color: var(--secondary-color) !important;
     }
     
     .stat-card {
-        background-color: rgba(255, 255, 255, 0.7);
+        background-color: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(5px);
         border-radius: 8px;
+        padding: 15px;
+        transition: all 0.3s;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
     
     .stat-card h3 {
         font-weight: 700;
         margin-bottom: 0.25rem;
+        color: var(--primary-color);
     }
     
     .stat-card small {
@@ -36,64 +56,119 @@
         color: #6c757d;
     }
     
-    .bg-primary {
-        background-color: #2c3e50 !important;
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        padding: 15px 0;
+        transition: all 0.2s;
     }
     
-    .bg-success {
-        background-color: #27ae60 !important;
+    .list-group-item:hover {
+        background-color: rgba(214, 44, 26, 0.03);
     }
     
+    .badge {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-color) !important;
+    }
+    
+    /* Colores específicos para los stats */
     .text-primary {
-        color: #2c3e50 !important;
+        color: var(--primary-color) !important;
     }
     
     .text-success {
-        color: #27ae60 !important;
+        color: var(--secondary-color) !important;
+    }
+    
+    .text-info {
+        color: #17a2b8 !important;
+    }
+    
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    
+    /* Animaciones */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animated-card {
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+    }
+    
+    /* Responsividad */
+    @media (max-width: 768px) {
+        .stat-card {
+            margin-bottom: 15px;
+        }
+        
+        .card-header {
+            padding: 12px 15px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid p-4">
+<div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <h3 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i> Panel de Control</h3>
-            <small class="text-muted">Resumen general del sistema</small>
+            <h3 class="mb-2"><i class="fas fa-tachometer-alt me-2" style="color: var(--secondary-color);"></i> Panel de Control</h3>
+            <p class="text-muted mb-0">Resumen general del sistema</p>
         </div>
     </div>
 
     <div class="row">
         <!-- Tarjeta de Resumen -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Resumen del Sistema</h5>
+        <div class="col-lg-6 mb-4 animated-card" style="animation-delay: 0.1s;">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="text-white mb-0"><i class="fas fa-info-circle me-2"></i> Resumen del Sistema</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center">
+                    <div class="row">
                         <div class="col-md-6 mb-3">
-                            <div class="p-3 stat-card">
-                                <h3 class="text-primary">{{ municipios_count }}</h3>
+                            <div class="stat-card">
+                                <h3>{{ municipios_count }}</h3>
                                 <small class="text-muted">Municipios Registrados</small>
+                                <div class="mt-2">
+                                    <i class="fas fa-map-marked-alt" style="color: var(--primary-color);"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <div class="p-3 stat-card">
+                            <div class="stat-card">
                                 <h3 class="text-success">{{ partes_hoy_count }}</h3>
                                 <small class="text-muted">Partes Hoy</small>
+                                <div class="mt-2">
+                                    <i class="fas fa-clipboard-list" style="color: var(--secondary-color);"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <div class="p-3 stat-card">
+                            <div class="stat-card">
                                 <h3 class="text-info">{{ servicios_count }}</h3>
                                 <small class="text-muted">Servicios Activos</small>
+                                <div class="mt-2">
+                                    <i class="fas fa-concierge-bell" style="color: #17a2b8;"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <div class="p-3 stat-card">
+                            <div class="stat-card">
                                 <h3 class="text-warning">{{ energia_recuperada }}</h3>
                                 <small class="text-muted">Energía Recuperada (kWh)</small>
+                                <div class="mt-2">
+                                    <i class="fas fa-bolt" style="color: #ffc107;"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -102,19 +177,19 @@
         </div>
         
         <!-- Tarjeta de Actividad Reciente -->
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-history me-2"></i> Actividad Reciente</h5>
+        <div class="col-lg-6 mb-4 animated-card" style="animation-delay: 0.2s;">
+            <div class="card h-100">
+                <div class="card-header bg-success">
+                    <h5 class=" text-white mb-0"><i class="fas fa-history me-2"></i> Actividad Reciente</h5>
                 </div>
                 <div class="card-body">
                     {% if actividad_reciente %}
                     <div class="list-group list-group-flush">
                         {% for actividad in actividad_reciente %}
-                        <div class="list-group-item border-0 py-2 px-0">
+                        <div class="list-group-item">
                             <div class="d-flex align-items-center">
                                 <div class="me-3">
-                                    <span class="badge bg-{{ actividad.color|default:'primary' }} rounded-circle p-2">
+                                    <span class="badge rounded-circle">
                                         <i class="fas fa-{{ actividad.icono|default:'bell' }}"></i>
                                     </span>
                                 </div>
@@ -122,13 +197,16 @@
                                     <h6 class="mb-1">{{ actividad.titulo }}</h6>
                                     <small class="text-muted">{{ actividad.fecha|date:"d/m/Y H:i" }}</small>
                                 </div>
+                                <div class="ms-2">
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                     {% else %}
                     <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <i class="fas fa-inbox fa-3x text-muted mb-3" style="opacity: 0.5;"></i>
                         <p class="text-muted">No hay actividad reciente</p>
                     </div>
                     {% endif %}
@@ -143,12 +221,7 @@
 <script>
     // Animación para las tarjetas al cargar
     document.addEventListener('DOMContentLoaded', function() {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.opacity = '1';
-            }, index * 100);
-        });
+        // Animación ya está manejada por CSS con animated-card
     });
 </script>
 {% endblock %}

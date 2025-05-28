@@ -4,15 +4,18 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card shadow">
+        <div class="card border-0 shadow-lg">
             <div class="card-header bg-danger text-white">
                 <h5 class="mb-0">
                     <i class="fas fa-exclamation-triangle me-2"></i> Eliminar Provincia
                 </h5>
             </div>
             <div class="card-body">
-                <p>¿Estás seguro de que deseas eliminar la provincia <strong>{{ object.nombre }}</strong>?</p>
-                <p class="text-muted">Esta acción no se puede deshacer.</p>
+                <div class="alert alert-danger border-start-4 border-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    ¿Estás seguro de que deseas eliminar la provincia <strong>{{ object.nombre }}</strong>?
+                </div>
+                <p class="text-muted mb-4"><i class="fas fa-info-circle me-1"></i> Esta acción no se puede deshacer.</p>
                 
                 <form method="post">
                     {% csrf_token %}

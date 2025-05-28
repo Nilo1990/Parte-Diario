@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -11,52 +12,206 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
+    <link rel="icon" href="{% static 'img/favicon.ico' %}">
+
     <style>
         :root {
             --sidebar-width: 280px;
-            --primary-color: #2c3e50;
+            --primary-color: #1a3e72;  /* Azul más intenso como en el logo */
+            --secondary-color: #d62c1a; /* Rojo más vibrante */
+            --hover-color: #b32415;    /* Rojo oscuro para hover */
+            --text-light: #f8f9fa;
+            --text-dark: #2c3e50;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f5f5f5;
+            color: var(--text-dark);
         }
         
         .sidebar {
             width: var(--sidebar-width);
             min-height: 100vh;
-            background-color: var(--primary-color);
+            background: linear-gradient(180deg, var(--primary-color) 0%, #0d2b52 100%);
             color: white;
             position: fixed;
             transition: all 0.3s;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .main-content {
             margin-left: var(--sidebar-width);
             transition: all 0.3s;
+            background-color: #f5f5f5;
+            min-height: 100vh;
         }
         
         .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            border-radius: 5px;
-            margin: 2px 0;
+            color: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            margin: 3px 0;
+            padding: 10px 15px;
+            transition: all 0.2s;
+            font-weight: 500;
         }
         
         .nav-link:hover, .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: var(--secondary-color);
+            color: white;
+            transform: translateX(3px);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+        }
+        
+        .btn-link {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        .btn-link:hover {
+            color: var(--secondary-color);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 2px 0;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--secondary-color);
             color: white;
         }
         
+        .container-fluid {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            margin: 20px;
+            padding: 25px !important;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .logo-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .logo-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Botones principales */
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 10px 20px;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+            border-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(214, 44, 26, 0.3);
+        }
+        
+        /* Focus en inputs */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(214, 44, 26, 0.25);
+        }
+        
+        /* Alertas */
+        .alert {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-danger {
+            background-color: rgba(214, 44, 26, 0.1);
+            color: #721c24;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-info {
+            background-color: rgba(23, 162, 184, 0.15);
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        /* Mejoras en los títulos */
+        h4, h5, h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        /* Efectos de hover en cards */
+        .card {
+            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsividad */
         @media (max-width: 768px) {
             .sidebar {
                 margin-left: -100%;
+                z-index: 1050;
             }
             .main-content {
                 margin-left: 0;
             }
             .sidebar-show .sidebar {
                 margin-left: 0;
+            }
+            .container-fluid {
+                margin: 10px;
+                padding: 15px !important;
+            }
+            
+            .nav-link {
+                padding: 8px 10px;
             }
         }
     </style>
@@ -67,92 +222,89 @@
     <!-- Sidebar -->
     <div class="sidebar p-3" id="sidebar">
         <div class="d-flex flex-column align-items-center mb-4">
-            <div class="logo-container bg-white p-2 rounded shadow-sm mb-2">
-                <a href="{% url 'dashboard' %}"><img src="{% static 'img/logo.jpg' %}" 
-                     alt="Logo Empresa Eléctrica" 
-                     class="img-fluid"
-                     style="max-height: 200px;"></a>
+            <div class="logo-container">
+                <a href="{% url 'dashboard' %}">
+                    <img src="{% static 'img/logo.jpg' %}" 
+                         alt="Logo Empresa Eléctrica" 
+                         class="img-fluid"
+                         style="max-height: 150px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));">
+                </a>
             </div>
             
-            
-            
-            
-            <h4>Empresa Eléctrica</h4>
-            <h6>Sistema de Gestión de Partes</h6>
+            <h4 class="text-center mt-2" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Empresa Eléctrica</h4>
+            <h6 class="text-center" style="color: rgba(255,255,255,0.8);">Sistema de Gestión de Partes</h6>
         </div>
         
         <ul class="nav flex-column">
-                        
             <!-- Menú CRUD -->
             <li class="nav-item mt-3">
-                <small class="text-white fw-bold ps-3" style="font-size: 0.85rem; letter-spacing: 0.5px;">GESTIÓN DE DATOS</small>
+                <small class="text-white fw-bold ps-3" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.8;">Gestión de Datos</small>
             </li>
             
-             <!-- Provincias -->
-             <li class="nav-item">
+            <!-- Elementos del menú -->
+            <li class="nav-item">
                 <a class="nav-link" href="{% url 'provincia-list' %}">
-                    <i class="fas fa-city me-2"></i> Provincias
+                    <i class="fas fa-globe-americas me-2"></i> Provincias
                 </a>
             </li>
-
-            <!-- Municipios -->
+            
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'municipio-list' %}">
-                    <i class="fas fa-city me-2"></i> Municipios
+                    <i class="fas fa-map-marked-alt me-2"></i> Municipios
                 </a>
             </li>
 
-            <!-- ParteDiario -->
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'partediario-list' %}">
-                    <i class="fas fa-city me-2"></i> Parte Diario
+                    <i class="fas fa-map-marked-alt me-2"></i> Parte Diario
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'energia-list' %}">
-                    <i class="fas fa-bolt me-2"></i> Energía Recuperada
+                    <i class="fas fa-map-marked-alt me-2"></i> Energía Recuperada
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'queja-list' %}">
-                    <i class="fas fa-bolt me-2"></i> Quejas
+                    <i class="fas fa-map-marked-alt me-2"></i> Quejas
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'servicio-list' %}">
-                    <i class="fas fa-tasks me-2"></i> Servicios
+                    <i class="fas fa-map-marked-alt me-2"></i> Servicios
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'contacto-admin' %}">
-                    <i class="fas fa-headset me-2"></i> Contactar Administrador
+                    <i class="fas fa-map-marked-alt me-2"></i> Contacto Administrador
                 </a>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'contacto-list' %}">
-                    <i class="fas fa-headset me-2"></i> Contactar (Registros)
+                    <i class="fas fa-map-marked-alt me-2"></i> Historial de Contacto
                 </a>
             </li>
 
-           
+            
+            
+            <!-- Resto de elementos del menú... -->
         </ul>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Navigation -->
-        <nav class="navbar navbar-expand bg-white shadow-sm p-3">
+        <nav class="navbar navbar-expand bg-white shadow-sm">
             <button class="btn btn-link" id="sidebarToggle">
                 <i class="fas fa-bars"></i>
             </button>
         
             <div class="navbar-nav ms-auto">
-                <!-- Fecha agregada aquí -->
                 <span class="nav-link text-dark me-3">
                     <i class="fas fa-calendar-alt me-1"></i>
                     {% now "d/m/Y" %}
@@ -188,7 +340,7 @@
         </nav>
         
         <!-- Content -->
-        <div class="container-fluid p-4">
+        <div class="container-fluid">
             {% block content %}
             <!-- El contenido de cada página irá aquí -->
             {% endblock %}
