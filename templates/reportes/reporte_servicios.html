@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Ejecución de Servicios{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-2"><i class="fas fa-concierge-bell me-2"></i> Reporte de Ejecución de Servicios</h3>
+            <p class="text-muted mb-0">Detalle por tipo de servicio</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Fecha inicio</label>
+                    <input type="date" class="form-control" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Fecha fin</label>
+                    <input type="date" class="form-control" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Tipo de Servicio</label>
+                    <select class="form-select" name="tipo_servicio">
+                        <option value="">Todos</option>
+                        {% for key, value in tipos_servicio.items %}
+                        <option value="{{ key }}" {% if tipo_seleccionado == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráficos o resumen por tipo de servicio -->
+    {% for tipo, datos_tipo in datos.items %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ tipo }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="card bg-light-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Pendientes</h5>
+                            <h2 class="mb-0">{{ datos_tipo.pendientes }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Ejecutados (Día)</h5>
+                            <h2 class="mb-0">{{ datos_tipo.ejecutados_dia }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light-info">
+                        <div class="card-body">
+                            <h5 class="card-title">Ejecutados (Mes)</h5>
+                            <h2 class="mb-0">{{ datos_tipo.ejecutados_mes }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3">Detalle por día</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Municipio</th>
+                            <th>Pendientes</th>
+                            <th>Ejecutados (Día)</th>
+                            <th>Ejecutados (Mes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in datos_tipo.detalles %}
+                        <tr>
+                            <td>{{ detalle.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ detalle.municipio }}</td>
+                            <td>{{ detalle.pendientes }}</td>
+                            <td>{{ detalle.ejecutados_dia }}</td>
+                            <td>{{ detalle.ejecutados_mes }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay datos disponibles</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">
+        No hay datos disponibles para los filtros seleccionados
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

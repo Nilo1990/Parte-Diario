@@ -11,13 +11,14 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 QuejaUpdateView, QuejaDeleteView,
                 QuejaDetailView, ServicioRegistroListView, ServicioRegistroCreateView, 
                 ServicioRegistroUpdateView, ServicioRegistroDeleteView,
-                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView) 
+                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes) 
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
 
 from django.conf import settings
 from django.conf.urls.static import static
+from . import views
 
 
 urlpatterns = [
@@ -69,8 +70,10 @@ urlpatterns = [
     path('contacto/', ContactoAdminView.as_view(), name='contacto-admin'),
     path('contacto/historial/', ContactoAdminListView.as_view(), name='contacto-list'),
 
-       
-    
+    path('reportes/', Reportes, name='reportes-list'),
+    path('reportes/energia/', views.reporte_energia, name='reporte-energia'),
+    path('reportes/quejas/', views.reporte_quejas, name='reporte-quejas'),
+    path('reportes/servicios/', views.reporte_servicios, name='reporte-servicios'),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte de Gestión de Quejas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-2"><i class="fas fa-exclamation-triangle me-2"></i> Reporte de Gestión de Quejas</h3>
+            <p class="text-muted mb-0">Eficiencia en resolución de quejas</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha inicio</label>
+                    <input type="date" class="form-control" name="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Fecha fin</label>
+                    <input type="date" class="form-control" name="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                <div class="col-md-3 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-light-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Recibidas</h5>
+                    <h2 class="mb-0">{{ total_recibidas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Resueltas</h5>
+                    <h2 class="mb-0">{{ total_resueltas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light-info">
+                <div class="card-body">
+                    <h5 class="card-title">Eficiencia</h5>
+                    <h2 class="mb-0">{{ porcentaje_total }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de datos -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Municipio</th>
+                            <th>Recibidas</th>
+                            <th>Resueltas</th>
+                            <th>Pendientes</th>
+                            <th>Eficiencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dato in datos %}
+                        <tr>
+                            <td>{{ dato.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ dato.municipio }}</td>
+                            <td>{{ dato.recibidas }}</td>
+                            <td>{{ dato.resueltas }}</td>
+                            <td>{{ dato.pendientes }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if dato.porcentaje >= 80 %}bg-success{% elif dato.porcentaje >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ dato.porcentaje }}%" 
+                                         aria-valuenow="{{ dato.porcentaje }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ dato.porcentaje }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay datos disponibles</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

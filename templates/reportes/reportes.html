@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Reportes - Empresa Eléctrica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+        border: 1px solid rgba(0,0,0,0.03);
+        margin-bottom: 25px;
+        overflow: hidden;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .report-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px 20px;
+        border-bottom: none;
+    }
+    
+    .report-body {
+        padding: 20px;
+    }
+    
+    .report-icon {
+        font-size: 2rem;
+        color: var(--secondary-color);
+        margin-bottom: 15px;
+    }
+    
+    .report-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .report-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .report-btn {
+        background-color: var(--secondary-color);
+        border: none;
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .report-btn:hover {
+        background-color: var(--hover-color);
+    }
+    
+    /* Filtros */
+    .filter-container {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-2"><i class="fas fa-chart-bar me-2" style="color: var(--secondary-color);"></i> Reportes</h3>
+            <p class="text-muted mb-0">Genera informes detallados del sistema</p>
+        </div>
+    </div>
+
+    
+    <!-- Tarjetas de Reportes -->
+    <div class="row">
+        <!-- Reporte de Energía -->
+        <div class="col-lg-4 col-md-6">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i> Energía</h5>
+                </div>
+                <div class="report-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5 class="report-title">Energía Recuperada</h5>
+                    <p class="report-description">
+                        Reporte comparativo entre energía planificada y real por municipio/provincia.
+                    </p>
+                    <a href="{% url 'reporte-energia' %}" class="btn btn-primary report-btn">
+                        Generar Reporte <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte de Quejas -->
+        <div class="col-lg-4 col-md-6">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Quejas</h5>
+                </div>
+                <div class="report-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <h5 class="report-title">Gestión de Quejas</h5>
+                    <p class="report-description">
+                        Eficiencia en resolución de quejas por municipio y período seleccionado.
+                    </p>
+                    <a href="{% url 'reporte-quejas' %}" class="btn btn-primary report-btn">
+                        Generar Reporte <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte de Servicios -->
+        <div class="col-lg-4 col-md-6">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="mb-0"><i class="fas fa-concierge-bell me-2"></i> Servicios</h5>
+                </div>
+                <div class="report-body text-center">
+                    <div class="report-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h5 class="report-title">Ejecución de Servicios</h5>
+                    <p class="report-description">
+                        Reporte detallado por tipo de servicio con comparativo diario/mensual.
+                    </p>
+                    <a href="{% url 'reporte-servicios' %}" class="btn btn-primary report-btn">
+                        Generar Reporte <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Más reportes... -->
+    </div>
+</div>
+{% endblock %}

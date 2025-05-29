@@ -1,15 +1,21 @@
-from django.db.models import Sum
+
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
-from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador
-from django.contrib.auth import logout
 from django.conf import settings
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador
 from django.contrib import messages
-from django.core.exceptions import ValidationError
 from .forms import ContactoAdminForm
+from django.db.models import Sum
+
+# views.py
+from django.shortcuts import render
+from django.db.models import Sum, Avg
+from .models import EnergiaRecuperada, Queja, ServicioRegistro, ParteDiario
+from datetime import datetime, timedelta, timezone
 
 def home_redirect(request):
     """Redirige a la raíz del sistema según autenticación"""
@@ -19,7 +25,85 @@ def home_redirect(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    # Obtener la fecha de hoy
+    hoy = datetime.now().date()
+    
+    # Estadísticas generales
+    municipios_count = Municipio.objects.count()
+    partes_hoy_count = ParteDiario.objects.filter(fecha=hoy).count()
+    
+    # Energía recuperada hoy
+    energia_hoy = EnergiaRecuperada.objects.filter(parte__fecha=hoy).aggregate(
+        total_plan=Sum('plan_mwh'),
+        total_real=Sum('real_mwh')
+    )
+    energia_recuperada = energia_hoy['total_real'] or 0
+    
+    # Quejas hoy
+    quejas_hoy = Queja.objects.filter(parte__fecha=hoy).aggregate(
+        recibidas=Sum('recibidas'),
+        resueltas=Sum('resueltas')
+    )
+    
+    # Servicios ejecutados hoy
+    servicios_hoy = ServicioRegistro.objects.filter(fecha_registro=hoy).aggregate(
+        ejecutados=Sum('ejecutados_dia')
+    )
+    servicios_count = servicios_hoy['ejecutados'] or 0
+    
+    # Actividad reciente (últimos 5 partes)
+    actividad_reciente = []
+    for parte in ParteDiario.objects.order_by('-fecha')[:5]:
+        actividad_reciente.append({
+            'titulo': f"Parte diario en {parte.municipio}",
+            'fecha': parte.fecha,
+            'icono': 'clipboard'
+        })
+    
+    # Gráficos de tendencia (últimos 7 días)
+    fechas = [hoy - timedelta(days=i) for i in range(6, -1, -1)]
+    
+    # Datos para gráfico de energía
+    energia_data = []
+    for fecha in fechas:
+        energia = EnergiaRecuperada.objects.filter(parte__fecha=fecha).aggregate(
+            plan=Sum('plan_mwh'),
+            real=Sum('real_mwh')
+        )
+        energia_data.append({
+            'fecha': fecha,
+            'plan': energia['plan'] or 0,
+            'real': energia['real'] or 0
+        })
+    
+    # Datos para gráfico de quejas
+    quejas_data = []
+    for fecha in fechas:
+        quejas = Queja.objects.filter(parte__fecha=fecha).aggregate(
+            recibidas=Sum('recibidas'),
+            resueltas=Sum('resueltas')
+        )
+        quejas_data.append({
+            'fecha': fecha,
+            'recibidas': quejas['recibidas'] or 0,
+            'resueltas': quejas['resueltas'] or 0,
+            'porcentaje': (quejas['resueltas'] / quejas['recibidas'] * 100) if quejas['recibidas'] and quejas['recibidas'] > 0 else 0
+        })
+    
+    context = {
+        'municipios_count': municipios_count,
+        'partes_hoy_count': partes_hoy_count,
+        'servicios_count': servicios_count,
+        'energia_recuperada': energia_recuperada,
+        'quejas_recibidas': quejas_hoy['recibidas'] or 0,
+        'quejas_resueltas': quejas_hoy['resueltas'] or 0,
+        'porcentaje_resueltas': (quejas_hoy['resueltas'] / quejas_hoy['recibidas'] * 100) if quejas_hoy['recibidas'] and quejas_hoy['recibidas'] > 0 else 0,
+        'actividad_reciente': actividad_reciente,
+        'energia_data': energia_data,
+        'quejas_data': quejas_data,
+        'fechas': [fecha.strftime('%d/%m') for fecha in fechas],  # Para gráficos
+    }
+    return render(request, 'dashboard.html', context)
 
 class ProvinciaListView(LoginRequiredMixin, ListView):
     model = Provincia
@@ -284,3 +368,130 @@ class ContactoAdminListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return ContactoAdministrador.objects.filter(usuario=self.request.user).order_by('-fecha')
+    
+def Reportes(request):
+        return render(request, 'reportes/reportes.html')
+
+def reporte_energia(request):
+    # Obtener parámetros de filtro
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    
+    # Filtrar datos
+    partes = ParteDiario.objects.all()
+    if fecha_inicio and fecha_fin:
+        partes = partes.filter(fecha__range=[fecha_inicio, fecha_fin])
+    
+    # Obtener datos de energía
+    datos_energia = []
+    for parte in partes:
+        energia = EnergiaRecuperada.objects.filter(parte=parte).first()
+        if energia:
+            datos_energia.append({
+                'fecha': parte.fecha,
+                'municipio': parte.municipio,
+                'plan': energia.plan_mwh,
+                'real': energia.real_mwh,
+                'diferencia': float(energia.real_mwh) - float(energia.plan_mwh),
+            })
+    
+    # Estadísticas
+    total_plan = sum(item['plan'] for item in datos_energia)
+    total_real = sum(item['real'] for item in datos_energia)
+    
+    context = {
+        'datos': datos_energia,
+        'total_plan': total_plan,
+        'total_real': total_real,
+        'diferencia_total': total_real - total_plan,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+    }
+    return render(request, 'reportes/reporte_energia.html', context)
+
+def reporte_quejas(request):
+    # Obtener parámetros de filtro
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    
+    # Filtrar datos
+    partes = ParteDiario.objects.all()
+    if fecha_inicio and fecha_fin:
+        partes = partes.filter(fecha__range=[fecha_inicio, fecha_fin])
+    
+    # Obtener datos de quejas
+    datos_quejas = []
+    for parte in partes:
+        queja = Queja.objects.filter(parte=parte).first()
+        if queja:
+            porcentaje = (queja.resueltas / queja.recibidas * 100) if queja.recibidas > 0 else 0
+            datos_quejas.append({
+                'fecha': parte.fecha,
+                'municipio': parte.municipio,
+                'recibidas': queja.recibidas,
+                'resueltas': queja.resueltas,
+                'pendientes': queja.recibidas - queja.resueltas,
+                'porcentaje': round(porcentaje, 2),
+            })
+    
+    # Estadísticas
+    total_recibidas = sum(item['recibidas'] for item in datos_quejas)
+    total_resueltas = sum(item['resueltas'] for item in datos_quejas)
+    porcentaje_total = (total_resueltas / total_recibidas * 100) if total_recibidas > 0 else 0
+    
+    context = {
+        'datos': datos_quejas,
+        'total_recibidas': total_recibidas,
+        'total_resueltas': total_resueltas,
+        'porcentaje_total': round(porcentaje_total, 2),
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+    }
+    return render(request, 'reportes/reporte_quejas.html', context)
+
+def reporte_servicios(request):
+    # Obtener parámetros de filtro
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    tipo_servicio = request.GET.get('tipo_servicio')
+    
+    # Filtrar datos
+    servicios = ServicioRegistro.objects.all()
+    if fecha_inicio and fecha_fin:
+        servicios = servicios.filter(fecha_registro__range=[fecha_inicio, fecha_fin])
+    if tipo_servicio:
+        servicios = servicios.filter(tipo_servicio=tipo_servicio)
+    
+    # Agrupar por tipo de servicio
+    tipos_servicio = dict(ServicioRegistro.TIPO_SERVICIO)
+    datos_servicios = {}
+    
+    for servicio in servicios:
+        tipo = servicio.get_tipo_servicio_display()
+        if tipo not in datos_servicios:
+            datos_servicios[tipo] = {
+                'pendientes': 0,
+                'ejecutados_dia': 0,
+                'ejecutados_mes': 0,
+                'detalles': []
+            }
+        
+        datos_servicios[tipo]['pendientes'] += servicio.pendientes
+        datos_servicios[tipo]['ejecutados_dia'] += servicio.ejecutados_dia
+        datos_servicios[tipo]['ejecutados_mes'] += servicio.ejecutados_mes
+        datos_servicios[tipo]['detalles'].append({
+            'fecha': servicio.fecha_registro,
+            'municipio': servicio.parte.municipio,
+            'pendientes': servicio.pendientes,
+            'ejecutados_dia': servicio.ejecutados_dia,
+            'ejecutados_mes': servicio.ejecutados_mes,
+        })
+    
+    context = {
+        'datos': datos_servicios,
+        'tipos_servicio': tipos_servicio,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin,
+        'tipo_seleccionado': tipo_servicio,
+    }
+    return render(request, 'reportes/reporte_servicios.html', context)
