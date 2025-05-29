@@ -493,5 +493,6 @@ def reporte_servicios(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'tipo_seleccionado': tipo_servicio,
+        
     }
     return render(request, 'reportes/reporte_servicios.html', context)
