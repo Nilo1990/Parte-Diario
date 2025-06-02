@@ -1,5 +1,427 @@
 {% extends 'base.html' %}
 
+{% block title %}Dashboard - Sistema de Partes{% endblock %}
 
-{% block title %}Sistema de Partes - Empresa Eléctrica Stgo{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+        <span class="text-muted">Actualizado: {{ hoy }}</span>
+    </div>
 
+    <!-- Tarjetas de métricas -->
+    <div class="row">
+        <!-- Provincias -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Provincias</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ provincias_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marked fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Municipios -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                Municipios</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ municipios_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-city fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Partes hoy -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Partes hoy</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ partes_hoy_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energía recuperada -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Energía (MWh)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ energia_recuperada }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bolt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servicios ejecutados -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Servicios hoy</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ servicios_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tools fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quejas resueltas -->
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Quejas resueltas</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ quejas_resueltas }}/{{ quejas_recibidas }}</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-danger" role="progressbar"
+                                            style="width: {{ porcentaje_resueltas }}%" 
+                                            aria-valuenow="{{ porcentaje_resueltas }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primera fila de gráficos -->
+    <div class="row">
+        <!-- Gráfico de energía -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Energía recuperada (últimos 7 días)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="energiaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de quejas -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Quejas (últimos 7 días)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="quejasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda fila de gráficos -->
+    <div class="row">
+        <!-- Distribución de servicios -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Distribución de servicios hoy</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="serviciosChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        {% for item in servicios_tipo_data %}
+                        <span class="mr-2">
+                            <i class="fas fa-circle" style="color: {{ item.color }}"></i> {{ item.label }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actividad por provincias -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Actividad por provincia (últimos 30 días)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="provinciasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tercera fila -->
+    <div class="row">
+        <!-- Actividad reciente -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Actividad reciente</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mt-4">
+                        {% for actividad in actividad_reciente %}
+                        <div class="mb-3">
+                            <div class="small text-gray-500">{{ actividad.fecha|date:"d/m/Y" }} - {{ actividad.usuario }}</div>
+                            <span class="font-weight-bold">
+                                <i class="fas fa-{{ actividad.icono }} mr-1"></i>
+                                {{ actividad.titulo }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No hay actividad reciente</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top municipios -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top municipios (energía recuperada)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Municipio</th>
+                                    <th>Provincia</th>
+                                    <th>Energía (MWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for provincia in provincias_data|slice:":5" %}
+                                <tr>
+                                    <td>{{ provincia.nombre }}</td>
+                                    <td>{{ provincia.nombre }}</td>
+                                    <td>{{ provincia.energia|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay datos</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Colores para los gráficos
+const COLORS = [
+    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+    '#858796', '#5a5c69', '#3a3b45', '#2e59a9', '#17a673'
+];
+
+// Preparar datos para gráfico de servicios
+var serviciosLabels = [
+    {% for item in servicios_tipo_data %}
+        '{{ item.label }}'{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+var serviciosData = [
+    {% for item in servicios_tipo_data %}
+        {{ item.cantidad }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+var serviciosColors = [
+    {% for item in servicios_tipo_data %}
+        {% if forloop.counter0 < COLORS.length %}
+            '{{ COLORS.forloop.counter0 }}'
+        {% else %}
+            '#' + Math.floor(Math.random()*16777215).toString(16)
+        {% endif %}
+        {% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Gráfico de energía
+var ctx = document.getElementById('energiaChart').getContext('2d');
+var energiaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ fechas_chart|safe }},
+        datasets: [
+            {
+                label: 'Plan (MWh)',
+                data: [{% for item in energia_data %}{{ item.plan }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                fill: true,
+                tension: 0.3
+            },
+            {
+                label: 'Real (MWh)',
+                data: [{% for item in energia_data %}{{ item.real }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                fill: true,
+                tension: 0.3
+            }
+        ]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Gráfico de quejas
+var ctx2 = document.getElementById('quejasChart').getContext('2d');
+var quejasChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: {{ fechas_chart|safe }},
+        datasets: [
+            {
+                label: 'Recibidas',
+                data: [{% for item in quejas_data %}{{ item.recibidas }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#f6c23e'
+            },
+            {
+                label: 'Resueltas',
+                data: [{% for item in quejas_data %}{{ item.resueltas }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#36b9cc'
+            }
+        ]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Gráfico de servicios por tipo
+var ctx3 = document.getElementById('serviciosChart').getContext('2d');
+var serviciosChart = new Chart(ctx3, {
+    type: 'doughnut',
+    data: {
+        labels: serviciosLabels,
+        datasets: [{
+            data: serviciosData,
+            backgroundColor: serviciosColors,
+            hoverBorderColor: "rgba(234, 236, 244, 1)",
+        }],
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        cutout: '70%',
+    },
+});
+
+// Gráfico de actividad por provincias
+var ctx4 = document.getElementById('provinciasChart').getContext('2d');
+var provinciasChart = new Chart(ctx4, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in provincias_data %}'{{ item.nombre }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [
+            {
+                label: "Partes",
+                data: [{% for item in provincias_data %}{{ item.partes }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#4e73df',
+            },
+            {
+                label: "Energía (MWh)",
+                data: [{% for item in provincias_data %}{{ item.energia }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#1cc88a',
+            },
+            {
+                label: "Quejas",
+                data: [{% for item in provincias_data %}{{ item.quejas }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: '#f6c23e',
+            }
+        ]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                stacked: true,
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

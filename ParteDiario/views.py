@@ -11,6 +11,11 @@ from django.contrib import messages
 from .forms import ContactoAdminForm
 from django.db.models import Sum
 
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from datetime import datetime, timedelta
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro
+
 # views.py
 from django.shortcuts import render
 from django.db.models import Sum, Avg
@@ -29,6 +34,7 @@ def dashboard(request):
     hoy = datetime.now().date()
     
     # Estadísticas generales
+    provincias_count = Provincia.objects.count()
     municipios_count = Municipio.objects.count()
     partes_hoy_count = ParteDiario.objects.filter(fecha=hoy).count()
     
@@ -44,21 +50,40 @@ def dashboard(request):
         recibidas=Sum('recibidas'),
         resueltas=Sum('resueltas')
     )
+    quejas_recibidas = quejas_hoy.get('recibidas', 0) or 0
+    quejas_resueltas = quejas_hoy.get('resueltas', 0) or 0
     
-    # Servicios ejecutados hoy
-    servicios_hoy = ServicioRegistro.objects.filter(fecha_registro=hoy).aggregate(
-        ejecutados=Sum('ejecutados_dia')
-    )
-    servicios_count = servicios_hoy['ejecutados'] or 0
+    # Porcentaje de quejas resueltas
+    try:
+        porcentaje_resueltas = (quejas_resueltas / quejas_recibidas * 100) if quejas_recibidas > 0 else 0
+    except ZeroDivisionError:
+        porcentaje_resueltas = 0
+    
+    # Servicios ejecutados hoy por tipo
+    servicios_hoy = ServicioRegistro.objects.filter(fecha_registro=hoy).values(
+        'tipo_servicio'
+    ).annotate(
+        total=Sum('ejecutados_dia')
+    ).order_by('-total')
+    
+    servicios_count = sum(item['total'] for item in servicios_hoy)
+    
+    # Distribución de servicios por tipo (para gráfico circular)
+    servicios_tipo_data = [
+        {'tipo': item['tipo_servicio'], 
+         'cantidad': item['total'],
+         'label': dict(ServicioRegistro.TIPO_SERVICIO)[item['tipo_servicio']]}
+        for item in servicios_hoy
+    ]
     
     # Actividad reciente (últimos 5 partes)
-    actividad_reciente = []
-    for parte in ParteDiario.objects.order_by('-fecha')[:5]:
-        actividad_reciente.append({
-            'titulo': f"Parte diario en {parte.municipio}",
-            'fecha': parte.fecha,
-            'icono': 'clipboard'
-        })
+    ultimos_partes = ParteDiario.objects.select_related('municipio', 'municipio__provincia').order_by('-fecha')[:5]
+    actividad_reciente = [{
+        'titulo': f"Parte en {parte.municipio.nombre} ({parte.municipio.provincia.nombre})",
+        'fecha': parte.fecha,
+        'icono': 'clipboard',
+        'usuario': parte.usuario.username
+    } for parte in ultimos_partes]
     
     # Gráficos de tendencia (últimos 7 días)
     fechas = [hoy - timedelta(days=i) for i in range(6, -1, -1)]
@@ -72,8 +97,8 @@ def dashboard(request):
         )
         energia_data.append({
             'fecha': fecha,
-            'plan': energia['plan'] or 0,
-            'real': energia['real'] or 0
+            'plan': energia.get('plan', 0) or 0,
+            'real': energia.get('real', 0) or 0
         })
     
     # Datos para gráfico de quejas
@@ -83,25 +108,57 @@ def dashboard(request):
             recibidas=Sum('recibidas'),
             resueltas=Sum('resueltas')
         )
+        recibidas = quejas.get('recibidas', 0) or 0
+        resueltas = quejas.get('resueltas', 0) or 0
+        
+        try:
+            porcentaje = (resueltas / recibidas * 100) if recibidas > 0 else 0
+        except ZeroDivisionError:
+            porcentaje = 0
+            
         quejas_data.append({
             'fecha': fecha,
-            'recibidas': quejas['recibidas'] or 0,
-            'resueltas': quejas['resueltas'] or 0,
-            'porcentaje': (quejas['resueltas'] / quejas['recibidas'] * 100) if quejas['recibidas'] and quejas['recibidas'] > 0 else 0
+            'recibidas': recibidas,
+            'resueltas': resueltas,
+            'porcentaje': porcentaje
+        })
+    
+    # Datos para gráfico de distribución por provincia
+    provincias_data = []
+    partes_por_provincia = ParteDiario.objects.filter(
+        fecha__gte=hoy - timedelta(days=30)
+    ).values(
+        'municipio__provincia__nombre'
+    ).annotate(
+        total=Count('id'),
+        energia=Sum('energiarecuperada__real_mwh'),
+        quejas=Sum('queja__recibidas')
+    ).order_by('-total')
+    
+    for provincia in partes_por_provincia:
+        provincias_data.append({
+            'nombre': provincia['municipio__provincia__nombre'],
+            'partes': provincia['total'],
+            'energia': provincia['energia'] or 0,
+            'quejas': provincia['quejas'] or 0
         })
     
     context = {
+        'provincias_count': provincias_count,
         'municipios_count': municipios_count,
         'partes_hoy_count': partes_hoy_count,
         'servicios_count': servicios_count,
+        'servicios_tipo_data': servicios_tipo_data,
         'energia_recuperada': energia_recuperada,
-        'quejas_recibidas': quejas_hoy['recibidas'] or 0,
-        'quejas_resueltas': quejas_hoy['resueltas'] or 0,
-        'porcentaje_resueltas': (quejas_hoy['resueltas'] / quejas_hoy['recibidas'] * 100) if quejas_hoy['recibidas'] and quejas_hoy['recibidas'] > 0 else 0,
+        'quejas_recibidas': quejas_recibidas,
+        'quejas_resueltas': quejas_resueltas,
+        'porcentaje_resueltas': porcentaje_resueltas,
         'actividad_reciente': actividad_reciente,
         'energia_data': energia_data,
         'quejas_data': quejas_data,
-        'fechas': [fecha.strftime('%d/%m') for fecha in fechas],  # Para gráficos
+        'provincias_data': provincias_data,
+        'fechas_chart': [fecha.strftime('%d-%m') for fecha in fechas],
+        'hoy': hoy.strftime('%d de %B de %Y'),
     }
     return render(request, 'dashboard.html', context)
 
