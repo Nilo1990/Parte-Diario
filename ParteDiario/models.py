@@ -132,7 +132,7 @@ class ContactoAdministrador(models.Model):
     asunto = models.CharField(max_length=100, verbose_name="Asunto")
     mensaje = models.TextField(verbose_name="Mensaje detallado")
     adjunto = models.FileField(
-        upload_to='contacto/adjuntos/',
+        upload_to='static/adjuntos/',
         null=True,
         blank=True,
         verbose_name="Adjuntar archivo (opcional)"
@@ -147,3 +147,205 @@ class ContactoAdministrador(models.Model):
 
     def __str__(self):
         return f"Contacto de {self.usuario.username} - {self.get_tipo_consulta_display()} ({self.fecha.date()})"
+    
+    
+class ClientesMorosos(models.Model):
+    ESTADO_GESTION_CHOICES = [  # Nombre más descriptivo
+        ('PENDIENTE', 'Pendiente de gestión'),
+        ('CONTACTADO', 'Cliente contactado'),
+        ('ACUERDO', 'Acuerdo de pago establecido'),
+        ('PAGADO', 'Deuda saldada'),
+        ('CORTADO', 'Servicio cortado'),
+        ('RECONECTADO', 'Servicio reconectado'),
+    ]
+    
+    parte = models.ForeignKey(
+        'ParteDiario', 
+        on_delete=models.CASCADE, 
+        related_name='clientes_morosos',
+        verbose_name="Parte diario asociado"
+    )
+    codigo_cliente = models.CharField(
+        max_length=20,
+        verbose_name="Código de cliente",
+        help_text="Número de identificación del cliente en el sistema"
+    )
+    nombre_cliente = models.CharField(
+        max_length=100,
+        verbose_name="Nombre completo"
+    )
+    direccion = models.CharField(
+        max_length=200,
+        verbose_name="Dirección del servicio"
+    )
+    municipio = models.ForeignKey(
+        'Municipio',
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name="Municipio del cliente"
+    )
+    deuda_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        verbose_name="Monto total adeudado (CUP)"
+    )
+    meses_morosidad = models.PositiveIntegerField(
+        verbose_name="Meses de morosidad"
+    )
+    fecha_ultimo_pago = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha del último pago realizado"
+    )
+    estado_gestion = models.CharField(
+        max_length=20,
+        choices=ESTADO_GESTION_CHOICES,  # Usando el nombre correcto
+        default='PENDIENTE',
+        verbose_name="Estado de gestión"
+    )
+    acciones_realizadas = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Acciones realizadas",
+        help_text="Detalle de las gestiones realizadas con el cliente"
+    )
+    fecha_proximo_contacto = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha próxima gestión"
+    )
+    notas = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Notas adicionales"
+    )
+    fecha_registro = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de registro"
+    )
+    usuario_registro = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='clientes_registrados',
+        verbose_name="Usuario que registró"
+    )
+
+    class Meta:
+        verbose_name = "Cliente Moroso"
+        verbose_name_plural = "Clientes Morosos"
+        ordering = ['-fecha_registro', 'municipio']
+        unique_together = ('parte', 'codigo_cliente')
+
+    def __str__(self):
+        return f"{self.codigo_cliente} - {self.nombre_cliente} ({self.get_estado_gestion_display()})"
+    
+    
+class OficinaComercial(models.Model):
+    provincia = models.ForeignKey(Provincia, null=True,on_delete=models.CASCADE)
+    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100, unique=True)
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.provincia})"
+
+class RegistroRecaudacion(models.Model):
+    MESES = [
+        ('ENERO', 'Enero'),
+        ('FEBRERO', 'Febrero'),
+        ('MARZO', 'Marzo'),
+        ('ABRIL', 'Abril'),
+        ('MAYO', 'Mayo'),
+        ('JUNIO', 'Junio'),
+        ('JULIO', 'Julio'),
+        ('AGOSTO', 'Agosto'),
+        ('SEPTIEMBRE', 'Septiembre'),
+        ('OCTUBRE', 'Octubre'),
+        ('NOVIEMBRE', 'Noviembre'),
+        ('DICIEMBRE', 'Diciembre'),
+    ]
+    
+    oficina = models.ForeignKey(OficinaComercial, on_delete=models.CASCADE, related_name='recaudaciones')
+    año = models.PositiveIntegerField()
+    mes = models.CharField(max_length=15, choices=MESES)
+    
+    # Campos de deuda
+    deuda_pendiente = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    deuda_cobrada = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Campos para gestión de cortes
+    plan_cortes_diario = models.PositiveIntegerField(default=0)
+    clientes_cortados_dia = models.PositiveIntegerField(default=0)
+    cortes_acumulados_mes = models.PositiveIntegerField(default=0)
+    
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    usuario_registro = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    class Meta:
+        verbose_name = "Registro de Recaudación"
+        verbose_name_plural = "Registros de Recaudación"
+        unique_together = ('oficina', 'año', 'mes')
+        ordering = ['año', 'mes', 'oficina']
+    
+    def __str__(self):
+        return f"{self.oficina} - {self.mes}/{self.año}"
+
+class ResumenAnualRecaudacion(models.Model):
+    oficina = models.ForeignKey(OficinaComercial, on_delete=models.CASCADE, related_name='resumenes_anuales')
+    año = models.PositiveIntegerField()
+    
+    # Totales anuales
+    deuda_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_cobrado = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Desglose por años anteriores (para historial)
+    deuda_2021 = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    deuda_2022 = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    deuda_2023 = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Resumen Anual de Recaudación"
+        verbose_name_plural = "Resúmenes Anuales de Recaudación"
+        unique_together = ('oficina', 'año')
+        ordering = ['-año', 'oficina']
+    
+    def __str__(self):
+        return f"Resumen {self.oficina} - {self.año}"
+
+class HistorialMorosidad(models.Model):
+    ESTADOS = [
+        ('PENDIENTE', 'Pendiente'),
+        ('GESTIONADO', 'Gestionado'),
+        ('ACUERDO_PAGO', 'Acuerdo de pago'),
+        ('PAGADO', 'Pagado'),
+        ('CORTADO', 'Servicio cortado'),
+    ]
+    
+    oficina = models.ForeignKey(OficinaComercial, on_delete=models.CASCADE, related_name='morosidad')
+    cliente_id = models.CharField(max_length=20)
+    nombre_cliente = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=200)
+    
+    # Datos de morosidad
+    deuda_total = models.DecimalField(max_digits=12, decimal_places=2)
+    meses_morosidad = models.PositiveIntegerField()
+    fecha_ultimo_pago = models.DateField(null=True, blank=True)
+    
+    # Gestión
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='PENDIENTE')
+    acciones_realizadas = models.TextField(blank=True, null=True)
+    fecha_proximo_contacto = models.DateField(null=True, blank=True)
+    notas = models.TextField(blank=True, null=True)
+    
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    usuario_registro = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    class Meta:
+        verbose_name = "Historial de Morosidad"
+        verbose_name_plural = "Historiales de Morosidad"
+        ordering = ['-fecha_registro']
+    
+    def __str__(self):
+        return f"{self.cliente_id} - {self.nombre_cliente} ({self.get_estado_display()})"
