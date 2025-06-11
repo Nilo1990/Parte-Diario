@@ -12,8 +12,19 @@
                 </h5>
             </div>
             <form method="post">
-                <div class="card-body">
+                <div class="card-body">                    
                     {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_nombre" class="form-label">Nombre de la Provincia</label>
+                        {{ form.provincia }}
+                        {% if form.nombre.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.nombre.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
                     <div class="mb-3">
                         <label for="id_nombre" class="form-label">Nombre del Municipio</label>
                         {{ form.nombre }}

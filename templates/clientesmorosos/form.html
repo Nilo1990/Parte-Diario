@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                    {% if object %}Editar{% else %}Crear{% endif %} Cliente Moroso
+                </h5>
+            </div>
+            <form method="post">
+                <div class="card-body">                    
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Parte Diario</label>
+                                {{ form.parte }}
+                                {% if form.parte.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.parte.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Código de Cliente</label>
+                                {{ form.codigo_cliente }}
+                                {% if form.codigo_cliente.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.codigo_cliente.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Cliente</label>
+                                {{ form.nombre_cliente }}
+                                {% if form.nombre_cliente.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nombre_cliente.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Dirección</label>
+                                {{ form.direccion }}
+                                {% if form.direccion.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.direccion.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Municipio</label>
+                                {{ form.municipio }}
+                                {% if form.municipio.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.municipio.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Deuda Total (CUP)</label>
+                                {{ form.deuda_total }}
+                                {% if form.deuda_total.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.deuda_total.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Meses de Morosidad</label>
+                                {{ form.meses_morosidad }}
+                                {% if form.meses_morosidad.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.meses_morosidad.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Fecha Último Pago</label>
+                                {{ form.fecha_ultimo_pago }}
+                                {% if form.fecha_ultimo_pago.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.fecha_ultimo_pago.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Estado de Gestión</label>
+                                {{ form.estado_gestion }}
+                                {% if form.estado_gestion.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.estado_gestion.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Fecha Próximo Contacto</label>
+                                {{ form.fecha_proximo_contacto }}
+                                {% if form.fecha_proximo_contacto.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.fecha_proximo_contacto.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Acciones Realizadas</label>
+                        {{ form.acciones_realizadas }}
+                        {% if form.acciones_realizadas.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.acciones_realizadas.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notas Adicionales</label>
+                        {{ form.notas }}
+                        {% if form.notas.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.notas.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{% url 'clientesmorosos-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

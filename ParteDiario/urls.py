@@ -11,7 +11,7 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 QuejaUpdateView, QuejaDeleteView,
                 QuejaDetailView, ServicioRegistroListView, ServicioRegistroCreateView, 
                 ServicioRegistroUpdateView, ServicioRegistroDeleteView,
-                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes) 
+                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes, ClientesMorososDetailView,ClientesMorososDeleteView, ClientesMorososUpdateView, ClientesMorososListView, ClientesMorososCreateView, ) 
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
@@ -19,6 +19,7 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -74,6 +75,13 @@ urlpatterns = [
     path('reportes/energia/', views.reporte_energia, name='reporte-energia'),
     path('reportes/quejas/', views.reporte_quejas, name='reporte-quejas'),
     path('reportes/servicios/', views.reporte_servicios, name='reporte-servicios'),
+    
+    path('clientes-morosos/', ClientesMorososListView.as_view(), name='clientesmorosos-list'),
+    path('clientes-morosos/nuevo/', ClientesMorososCreateView.as_view(), name='clientesmorosos-create'),
+    path('clientes-morosos/editar/<int:pk>/', ClientesMorososUpdateView.as_view(), name='clientesmorosos-update'),
+    path('clientes-morosos/eliminar/<int:pk>/', ClientesMorososDeleteView.as_view(), name='clientesmorosos-delete'),
+    path('clientes-morosos/<int:pk>/', ClientesMorososDetailView.as_view(), name='clientesmorosos-detail'),
+                    
 ]
 
 if settings.DEBUG:

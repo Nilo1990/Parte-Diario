@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.conf import settings
-from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador, ClientesMorosos
 from django.contrib import messages
 from .forms import ContactoAdminForm
 from django.db.models import Sum
@@ -15,12 +15,13 @@ from django.shortcuts import render
 from django.db.models import Sum, Count
 from datetime import datetime, timedelta
 from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro
-
-# views.py
-from django.shortcuts import render
-from django.db.models import Sum, Avg
+from django.db.models import Sum
 from .models import EnergiaRecuperada, Queja, ServicioRegistro, ParteDiario
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 def home_redirect(request):
     """Redirige a la raíz del sistema según autenticación"""
@@ -195,7 +196,7 @@ class MunicipioListView(LoginRequiredMixin, ListView):
 class MunicipioCreateView(LoginRequiredMixin, CreateView):
     model = Municipio
     template_name = 'municipios/form.html'
-    fields = ['nombre']
+    fields = ['provincia','nombre']
     success_url = reverse_lazy('municipio-list')
 
 class MunicipioUpdateView(LoginRequiredMixin, UpdateView):
@@ -553,3 +554,40 @@ def reporte_servicios(request):
         
     }
     return render(request, 'reportes/reporte_servicios.html', context)
+
+class ClientesMorososListView(LoginRequiredMixin, ListView):
+    model = ClientesMorosos
+    template_name = 'clientesmorosos/list.html'
+    context_object_name = 'clientes'
+    paginate_by = 10
+    ordering = ['-fecha_registro']
+
+class ClientesMorososCreateView(LoginRequiredMixin, CreateView):
+    model = ClientesMorosos
+    template_name = 'clientesmorosos/form.html'
+    fields = ['parte', 'codigo_cliente', 'nombre_cliente', 'direccion', 'municipio', 
+              'deuda_total', 'meses_morosidad', 'fecha_ultimo_pago', 
+              'estado_gestion', 'acciones_realizadas', 'fecha_proximo_contacto', 'notas']
+    success_url = reverse_lazy('clientesmorosos-list')
+
+    def form_valid(self, form):
+        form.instance.usuario_registro = self.request.user
+        return super().form_valid(form)
+
+class ClientesMorososUpdateView(LoginRequiredMixin, UpdateView):
+    model = ClientesMorosos
+    template_name = 'clientesmorosos/form.html'
+    fields = ['parte', 'codigo_cliente', 'nombre_cliente', 'direccion', 'municipio', 
+              'deuda_total', 'meses_morosidad', 'fecha_ultimo_pago', 
+              'estado_gestion', 'acciones_realizadas', 'fecha_proximo_contacto', 'notas']
+    success_url = reverse_lazy('clientesmorosos-list')
+
+class ClientesMorososDeleteView(LoginRequiredMixin, DeleteView):
+    model = ClientesMorosos
+    template_name = 'clientesmorosos/confirm_delete.html'
+    success_url = reverse_lazy('clientesmorosos-list')
+
+class ClientesMorososDetailView(LoginRequiredMixin, DetailView):
+    model = ClientesMorosos
+    template_name = 'clientesmorosos/detail.html'
+    context_object_name = 'cliente'

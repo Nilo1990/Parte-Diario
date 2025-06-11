@@ -1,6 +1,8 @@
 from django import forms
 from .models import ContactoAdministrador
 from django.core.validators import FileExtensionValidator
+from django import forms
+from .models import ClientesMorosos
 
 class ContactoAdminForm(forms.ModelForm):
     class Meta:
