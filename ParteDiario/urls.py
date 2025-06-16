@@ -11,7 +11,10 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 QuejaUpdateView, QuejaDeleteView,
                 QuejaDetailView, ServicioRegistroListView, ServicioRegistroCreateView, 
                 ServicioRegistroUpdateView, ServicioRegistroDeleteView,
-                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes, ClientesMorososDetailView,ClientesMorososDeleteView, ClientesMorososUpdateView, ClientesMorososListView, ClientesMorososCreateView, ) 
+                ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes, ClientesMorososDetailView,ClientesMorososDeleteView, ClientesMorososUpdateView, ClientesMorososListView, ClientesMorososCreateView,
+                OficinaComercialListView, OficinaComercialCreateView,
+    OficinaComercialUpdateView, OficinaComercialDeleteView,
+    OficinaComercialDetailView) 
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
@@ -81,6 +84,13 @@ urlpatterns = [
     path('clientes-morosos/editar/<int:pk>/', ClientesMorososUpdateView.as_view(), name='clientesmorosos-update'),
     path('clientes-morosos/eliminar/<int:pk>/', ClientesMorososDeleteView.as_view(), name='clientesmorosos-delete'),
     path('clientes-morosos/<int:pk>/', ClientesMorososDetailView.as_view(), name='clientesmorosos-detail'),
+    
+    path('oficinas-comerciales/', OficinaComercialListView.as_view(), name='oficinacomercial-list'),
+    path('oficinas-comerciales/nuevo/', OficinaComercialCreateView.as_view(), name='oficinacomercial-create'),
+    path('oficinas-comerciales/<int:pk>/', OficinaComercialDetailView.as_view(), name='oficinacomercial-detail'),
+    path('oficinas-comerciales/editar/<int:pk>/', OficinaComercialUpdateView.as_view(), name='oficinacomercial-update'),
+    path('oficinas-comerciales/eliminar/<int:pk>/', OficinaComercialDeleteView.as_view(), name='oficinacomercial-delete'),
+    path('municipios/por-provincia/<int:provincia_id>/', views.municipios_por_provincia, name='municipios-por-provincia'),
                     
 ]
 

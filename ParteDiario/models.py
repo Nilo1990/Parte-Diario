@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.forms import ValidationError
 from django.utils import timezone
 
 class Provincia(models.Model):
@@ -242,9 +243,16 @@ class ClientesMorosos(models.Model):
     
     
 class OficinaComercial(models.Model):
-    provincia = models.ForeignKey(Provincia, null=True,on_delete=models.CASCADE)
+    provincia = models.ForeignKey(Provincia, null=True, on_delete=models.CASCADE)
     municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)
     nombre = models.CharField(max_length=100, unique=True)
+    
+    def clean(self):
+        super().clean()
+        if self.municipio and self.provincia and self.municipio.provincia != self.provincia:
+            raise ValidationError({
+                'municipio': 'El municipio seleccionado no pertenece a la provincia elegida'
+            })
     
     def __str__(self):
         return f"{self.nombre} ({self.provincia})"

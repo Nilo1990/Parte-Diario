@@ -84,6 +84,28 @@
             </div>
         </div>
 
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-dark shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                                Clientes Morosos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ morosos_count }}</div>
+                            <div class="mt-2 small">
+                                <span class="text-danger font-weight-bold">
+                                    {{ deuda_total|floatformat:2 }} CUP
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Servicios ejecutados -->
         <div class="col-xl-2 col-md-4 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
@@ -263,8 +285,70 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Deuda por municipio (últimos 30 días)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="morosidadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
     </div>
+    <div class="row">
+        <!-- Top clientes morosos -->
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Clientes con mayor morosidad (Top 5)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Municipio</th>
+                                    <th>Deuda (CUP)</th>
+                                    <th>Meses</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cliente in top_morosos %}
+                                <tr>
+                                    <td>{{ cliente.codigo_cliente }}</td>
+                                    <td>{{ cliente.nombre_cliente|truncatechars:20 }}</td>
+                                    <td>{{ cliente.municipio.nombre }}</td>
+                                    <td class="text-danger font-weight-bold">{{ cliente.deuda_total|floatformat:2 }}</td>
+                                    <td>{{ cliente.meses_morosidad }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if cliente.estado_gestion == 'PAGADO' %}success{% elif cliente.estado_gestion == 'PENDIENTE' %}warning{% else %}info{% endif %}">
+                                            {{ cliente.get_estado_gestion_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay clientes morosos registrados hoy</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -419,6 +503,32 @@ var provinciasChart = new Chart(ctx4, {
             y: {
                 stacked: true,
                 beginAtZero: true
+            }
+        }
+    }
+});
+
+var ctx5 = document.getElementById('morosidadChart').getContext('2d');
+var morosidadChart = new Chart(ctx5, {
+    type: 'bar',
+    data: {
+        labels: [{% for item in provincias_data %}'{{ item.nombre }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: "Deuda acumulada (CUP)",
+            data: [{% for item in provincias_data %}{{ item.deuda|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: '#e74a3b',
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('es-CU') + ' CUP';
+                    }
+                }
             }
         }
     }

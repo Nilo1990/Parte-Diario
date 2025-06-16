@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Oficina Comercial{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Eliminar Oficina Comercial</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <p class="lead">¿Estás seguro que deseas eliminar la oficina comercial <strong>{{ object.nombre }}</strong>?</p>
+            <p class="text-danger">Esta acción no se puede deshacer.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash mr-1"></i> Sí, eliminar
+                </button>
+                <a href="{% url 'oficinacomercial-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-1"></i> Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

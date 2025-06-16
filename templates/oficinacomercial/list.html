@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Oficinas Comerciales{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Oficinas Comerciales</h1>
+        <a href="{% url 'oficinacomercial-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-1"></i> Nueva Oficina
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="form-inline">
+                <div class="form-group mr-3">
+                    <label for="provincia" class="mr-2">Provincia:</label>
+                    <select name="provincia" id="provincia" class="form-control">
+                        <option value="">Todas</option>
+                        {% for provincia in provincias %}
+                        <option value="{{ provincia.id }}" {% if request.GET.provincia == provincia.id|stringformat:"s" %}selected{% endif %}>
+                            {{ provincia.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mr-3">
+                    <label for="municipio" class="mr-2">Municipio:</label>
+                    <select name="municipio" id="municipio" class="form-control">
+                        <option value="">Todos</option>
+                        {% for municipio in municipios %}
+                        <option value="{{ municipio.id }}" {% if request.GET.municipio == municipio.id|stringformat:"s" %}selected{% endif %}>
+                            {{ municipio.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter mr-1"></i> Filtrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Provincia</th>
+                            <th>Municipio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for oficina in oficinas %}
+                        <tr>
+                            <td>{{ oficina.nombre }}</td>
+                            <td>{{ oficina.provincia }}</td>
+                            <td>{{ oficina.municipio }}</td>
+                            <td>
+                                <a href="{% url 'oficinacomercial-detail' oficina.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'oficinacomercial-update' oficina.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'oficinacomercial-delete' oficina.pk %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No hay oficinas comerciales registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            {% if is_paginated %}
+            <div class="mt-4">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.provincia %}&provincia={{ request.GET.provincia }}{% endif %}{% if request.GET.municipio %}&municipio={{ request.GET.municipio }}{% endif %}">
+                                &laquo; Anterior
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo; Anterior</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if request.GET.provincia %}&provincia={{ request.GET.provincia }}{% endif %}{% if request.GET.municipio %}&municipio={{ request.GET.municipio }}{% endif %}">
+                                {{ i }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.provincia %}&provincia={{ request.GET.provincia }}{% endif %}{% if request.GET.municipio %}&municipio={{ request.GET.municipio }}{% endif %}">
+                                Siguiente &raquo;
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Siguiente &raquo;</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Cargar municipios cuando cambia la provincia
+    $('#provincia').change(function() {
+        var provinciaId = $(this).val();
+        if (provinciaId) {
+            $.ajax({
+                url: '/municipios/por-provincia/' + provinciaId + '/',
+                success: function(data) {
+                    $('#municipio').empty();
+                    $('#municipio').append('<option value="">Todos</option>');
+                    $.each(data, function(key, value) {
+                        $('#municipio').append('<option value="' + value.id + '">' + value.nombre + '</option>');
+                    });
+                }
+            });
+        } else {
+            $('#municipio').empty();
+            $('#municipio').append('<option value="">Todos</option>');
+        }
+    });
+});
+</script>
+{% endblock %}

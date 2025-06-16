@@ -1,4 +1,5 @@
-
+from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
@@ -6,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.conf import settings
-from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador, ClientesMorosos
+from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador, ClientesMorosos, OficinaComercial
 from django.contrib import messages
 from .forms import ContactoAdminForm
 from django.db.models import Sum
@@ -21,6 +22,7 @@ from datetime import datetime, timedelta
 
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
 
 
 def home_redirect(request):
@@ -136,13 +138,14 @@ def dashboard(request):
         quejas=Sum('queja__recibidas')
     ).order_by('-total')
     
-    for provincia in partes_por_provincia:
-        provincias_data.append({
-            'nombre': provincia['municipio__provincia__nombre'],
-            'partes': provincia['total'],
-            'energia': provincia['energia'] or 0,
-            'quejas': provincia['quejas'] or 0
-        })
+    for provincia in provincias_data:
+        morosidad = ClientesMorosos.objects.filter(
+            municipio__provincia__nombre=provincia['nombre'],
+            fecha_registro__gte=hoy - timedelta(days=30)
+        ).aggregate(
+            total_deuda=Sum('deuda_total')
+        )
+        provincia['deuda'] = morosidad['total_deuda'] or 0
     
     context = {
         'provincias_count': provincias_count,
@@ -161,6 +164,23 @@ def dashboard(request):
         'fechas_chart': [fecha.strftime('%d-%m') for fecha in fechas],
         'hoy': hoy.strftime('%d de %B de %Y'),
     }
+    
+    
+     # Datos de clientes morosos
+    hoy = datetime.now().date()
+    morosos_hoy = ClientesMorosos.objects.filter(fecha_registro__date=hoy)
+    morosos_count = morosos_hoy.count()
+    deuda_total = morosos_hoy.aggregate(total=Sum('deuda_total'))['total'] or 0
+    
+    # Top 5 clientes con mayor deuda
+    top_morosos = ClientesMorosos.objects.order_by('-deuda_total')[:5]
+    
+    # Actualizar el contexto
+    context.update({
+        'morosos_count': morosos_count,
+        'deuda_total': deuda_total,
+        'top_morosos': top_morosos,
+    })
     return render(request, 'dashboard.html', context)
 
 class ProvinciaListView(LoginRequiredMixin, ListView):
@@ -591,3 +611,105 @@ class ClientesMorososDetailView(LoginRequiredMixin, DetailView):
     model = ClientesMorosos
     template_name = 'clientesmorosos/detail.html'
     context_object_name = 'cliente'
+    
+class OficinaComercialListView(LoginRequiredMixin, ListView):
+    model = OficinaComercial
+    template_name = 'oficinacomercial/list.html'
+    context_object_name = 'oficinas'
+    paginate_by = 10
+    ordering = ['provincia__nombre', 'nombre']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        provincia_id = self.request.GET.get('provincia')
+        municipio_id = self.request.GET.get('municipio')
+        
+        if provincia_id:
+            queryset = queryset.filter(provincia_id=provincia_id)
+        if municipio_id:
+            queryset = queryset.filter(municipio_id=municipio_id)
+            
+        return queryset.select_related('provincia', 'municipio')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['provincias'] = Provincia.objects.all()
+        context['municipios'] = Municipio.objects.all()
+        return context
+
+class OficinaComercialCreateView(LoginRequiredMixin, CreateView):
+    model = OficinaComercial
+    template_name = 'oficinacomercial/form.html'
+    fields = ['provincia', 'municipio', 'nombre']
+    success_url = reverse_lazy('oficinacomercial-list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Mostrar todos los municipios inicialmente
+        form.fields['municipio'].queryset = Municipio.objects.all()
+        
+        # Si hay una provincia en el GET request, filtrar municipios
+        if 'provincia' in self.request.GET:
+            try:
+                provincia_id = int(self.request.GET.get('provincia'))
+                form.fields['municipio'].queryset = Municipio.objects.filter(
+                    provincia_id=provincia_id
+                ).order_by('nombre')
+            except (ValueError, TypeError):
+                pass
+                
+        return form
+
+    def form_valid(self, form):
+        # Validación adicional para asegurar que el municipio pertenece a la provincia
+        municipio = form.cleaned_data.get('municipio')
+        provincia = form.cleaned_data.get('provincia')
+        
+        if municipio and provincia and municipio.provincia != provincia:
+            form.add_error('municipio', 'El municipio seleccionado no pertenece a la provincia elegida')
+            return self.form_invalid(form)
+            
+        return super().form_valid(form)
+
+class OficinaComercialUpdateView(LoginRequiredMixin, UpdateView):
+    model = OficinaComercial
+    template_name = 'oficinacomercial/form.html'
+    fields = ['provincia', 'municipio', 'nombre']
+    success_url = reverse_lazy('oficinacomercial-list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        if form.instance.provincia:
+            form.fields['municipio'].queryset = Municipio.objects.filter(provincia=form.instance.provincia)
+        else:
+            form.fields['municipio'].queryset = Municipio.objects.none()
+        return form
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Oficina comercial actualizada exitosamente')
+        return super().form_valid(form)
+
+class OficinaComercialDeleteView(LoginRequiredMixin, DeleteView):
+    model = OficinaComercial
+    template_name = 'oficinacomercial/confirm_delete.html'
+    success_url = reverse_lazy('oficinacomercial-list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Oficina comercial eliminada exitosamente')
+        return super().delete(request, *args, **kwargs)
+
+class OficinaComercialDetailView(LoginRequiredMixin, DetailView):
+    model = OficinaComercial
+    template_name = 'oficinacomercial/detail.html'
+    context_object_name = 'oficina'
+    
+def municipios_por_provincia(request, provincia_id):
+    municipios = Municipio.objects.filter(
+        provincia_id=provincia_id
+    ).order_by('nombre').values('id', 'nombre')
+    
+    return JsonResponse(
+        list(municipios), 
+        safe=False, 
+        encoder=DjangoJSONEncoder
+    )
