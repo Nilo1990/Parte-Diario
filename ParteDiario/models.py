@@ -15,11 +15,41 @@ class Municipio(models.Model):
     
     def __str__(self):
         return f"{self.provincia} - {self.nombre}"
+    
+class OficinaComercial(models.Model):
+    provincia = models.ForeignKey(Provincia, null=True, on_delete=models.CASCADE)
+    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100, unique=True)
+    
+    def save(self, *args, **kwargs):
+        # Asegurar que la provincia coincide con la del municipio
+        if self.municipio and not self.provincia:
+            self.provincia = self.municipio.provincia
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.municipio})"
 
 class ParteDiario(models.Model):
     fecha = models.DateField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    municipio = models.ForeignKey(Municipio, on_delete=models.CASCADE)
+    provincia = models.ForeignKey(Provincia, null=True, on_delete=models.CASCADE)
+    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)  # Eliminé null=True
+    oficina_comercial = models.ForeignKey(OficinaComercial, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def clean(self):
+        super().clean()
+        # Validar que el municipio pertenece a la provincia
+        if self.municipio and self.provincia and self.municipio.provincia != self.provincia:
+            raise ValidationError({
+                'municipio': 'El municipio seleccionado no pertenece a la provincia elegida'
+            })
+        
+        # Validar que la oficina pertenece al municipio
+        if self.oficina_comercial and self.municipio and self.oficina_comercial.municipio != self.municipio:
+            raise ValidationError({
+                'oficina_comercial': 'La oficina comercial seleccionada no pertenece al municipio elegido'
+            })
     
     def __str__(self):
         return f"Parte {self.id} - {self.municipio} ({self.fecha})"
@@ -241,22 +271,6 @@ class ClientesMorosos(models.Model):
     def __str__(self):
         return f"{self.codigo_cliente} - {self.nombre_cliente} ({self.get_estado_gestion_display()})"
     
-    
-class OficinaComercial(models.Model):
-    provincia = models.ForeignKey(Provincia, null=True, on_delete=models.CASCADE)
-    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)
-    nombre = models.CharField(max_length=100, unique=True)
-    
-    def clean(self):
-        super().clean()
-        if self.municipio and self.provincia and self.municipio.provincia != self.provincia:
-            raise ValidationError({
-                'municipio': 'El municipio seleccionado no pertenece a la provincia elegida'
-            })
-    
-    def __str__(self):
-        return f"{self.nombre} ({self.provincia})"
-
 class RegistroRecaudacion(models.Model):
     MESES = [
         ('ENERO', 'Enero'),

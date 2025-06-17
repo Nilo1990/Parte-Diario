@@ -1,11 +1,137 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>{% if object %}Editar{% else %}Nuevo{% endif %} Parte Diario</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Guardar</button>
-    <a href="{% url 'partediario-list' %}" class="btn btn-secondary">Cancelar</a>
-</form>
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" id="parteForm" novalidate>
+                {% csrf_token %}
+                
+                <!-- Provincia -->
+                <div class="form-group row mb-3">
+                    <label for="id_provincia" class="col-sm-3 col-form-label">
+                        Provincia *
+                    </label>
+                    <div class="col-sm-9">
+                        {{ form.provincia }}
+                        {{ form.provincia.errors }}
+                    </div>
+                </div>
+                
+                <!-- Municipio -->
+                <div class="form-group row mb-3">
+                    <label for="id_municipio" class="col-sm-3 col-form-label">
+                        Municipio *
+                    </label>
+                    <div class="col-sm-9">
+                        <select name="municipio" id="id_municipio" class="form-control" required>
+                            <option value="">---------</option>
+                            {% if form.instance.municipio %}
+                                <option value="{{ form.instance.municipio.id }}" selected>
+                                    {{ form.instance.municipio.nombre }}
+                                </option>
+                            {% endif %}
+                        </select>
+                        {{ form.municipio.errors }}
+                    </div>
+                </div>
+                
+                <!-- Oficina Comercial -->
+                <div class="form-group row mb-3">
+                    <label for="id_oficina_comercial" class="col-sm-3 col-form-label">
+                        Oficina Comercial
+                    </label>
+                    <div class="col-sm-9">
+                        <select name="oficina_comercial" id="id_oficina_comercial" class="form-control">
+                            <option value="">---------</option>
+                            {% if form.instance.oficina_comercial %}
+                                <option value="{{ form.instance.oficina_comercial.id }}" selected>
+                                    {{ form.instance.oficina_comercial.nombre }}
+                                </option>
+                            {% endif %}
+                        </select>
+                        {{ form.oficina_comercial.errors }}
+                    </div>
+                </div>
+                
+                <div class="form-group row">
+                    <div class="col-sm-9 offset-sm-3">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Guardar
+                        </button>
+                        <a href="{% url 'partediario-list' %}" class="btn btn-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Cargar municipios cuando cambia la provincia
+    $('#id_provincia').change(function() {
+        var provinciaId = $(this).val();
+        if (provinciaId) {
+            $.getJSON("{% url 'municipios-por-provincia' 0 %}".replace('0', provinciaId), function(data) {
+                var options = '<option value="">---------</option>';
+                $.each(data, function(index, item) {
+                    options += '<option value="' + item.id + '">' + item.nombre + '</option>';
+                });
+                $('#id_municipio').html(options);
+                $('#id_oficina_comercial').html('<option value="">---------</option>');
+            });
+        } else {
+            $('#id_municipio').html('<option value="">---------</option>');
+            $('#id_oficina_comercial').html('<option value="">---------</option>');
+        }
+    });
+
+    // Cargar oficinas cuando cambia el municipio
+    $('#id_municipio').change(function() {
+        var municipioId = $(this).val();
+        if (municipioId) {
+            $.getJSON("{% url 'oficinas-por-municipio' 0 %}".replace('0', municipioId), function(data) {
+                var options = '<option value="">---------</option>';
+                $.each(data, function(index, item) {
+                    options += '<option value="' + item.id + '">' + item.nombre + '</option>';
+                });
+                $('#id_oficina_comercial').html(options);
+            });
+        } else {
+            $('#id_oficina_comercial').html('<option value="">---------</option>');
+        }
+    });
+
+    // Cargar datos iniciales si estamos editando
+    {% if form.instance.pk %}
+        var provinciaId = "{{ form.instance.provincia_id }}";
+        var municipioId = "{{ form.instance.municipio_id }}";
+        var oficinaId = "{{ form.instance.oficina_comercial_id }}";
+        
+        if (provinciaId) {
+            $('#id_provincia').val(provinciaId).trigger('change');
+            
+            // Esperar a que carguen los municipios
+            setTimeout(function() {
+                if (municipioId) {
+                    $('#id_municipio').val(municipioId).trigger('change');
+                    
+                    // Esperar a que carguen las oficinas
+                    setTimeout(function() {
+                        if (oficinaId) {
+                            $('#id_oficina_comercial').val(oficinaId);
+                        }
+                    }, 500);
+                }
+            }, 500);
+        }
+    {% endif %}
+});
+</script>
 {% endblock %}

@@ -8,6 +8,7 @@
         <tr>
             <th>Fecha</th>
             <th>Usuario</th>
+            <th>Provincia</th>
             <th>Municipio</th>
             <th>Acciones</th>
         </tr>
@@ -17,6 +18,7 @@
         <tr>
             <td>{{ parte.fecha|date:"d/m/Y" }}</td>
             <td>{{ parte.usuario.get_full_name|default:parte.usuario.username }}</td>
+            <td>{{ parte.provincia.nombre }}</td>
             <td>{{ parte.municipio.nombre }}</td>
             <td>
                 <div class="btn-group" role="group">

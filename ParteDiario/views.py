@@ -246,12 +246,54 @@ class ParteDiarioListView(LoginRequiredMixin, ListView):
 class ParteDiarioCreateView(LoginRequiredMixin, CreateView):
     model = ParteDiario
     template_name = 'partediario/form.html'
-    fields = ['municipio']  # Campos editables (usuario y fecha son automáticos)
+    fields = ['provincia', 'municipio', 'oficina_comercial']
     success_url = reverse_lazy('partediario-list')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        
+        # Siempre mostrar todas las provincias
+        form.fields['provincia'].queryset = Provincia.objects.all().order_by('nombre')
+        
+        # Deshabilitar la validación de opciones para municipio y oficina
+        form.fields['municipio'].queryset = Municipio.objects.all()
+        form.fields['oficina_comercial'].queryset = OficinaComercial.objects.all()
+        
+        # Para que no aparezcan todos los registros en el HTML
+        form.fields['municipio'].widget.attrs['data-live-search'] = 'true'
+        form.fields['oficina_comercial'].widget.attrs['data-live-search'] = 'true'
+        
+        return form
+
     def form_valid(self, form):
-        form.instance.usuario = self.request.user  # Asigna el usuario autenticado
+        form.instance.usuario = self.request.user
+        
+        # Validación manual de relaciones
+        municipio = form.cleaned_data.get('municipio')
+        provincia = form.cleaned_data.get('provincia')
+        oficina = form.cleaned_data.get('oficina_comercial')
+        
+        if not municipio:
+            form.add_error('municipio', 'Debe seleccionar un municipio')
+            return self.form_invalid(form)
+            
+        if municipio.provincia != provincia:
+            form.add_error('municipio', 'El municipio no pertenece a la provincia seleccionada')
+            return self.form_invalid(form)
+            
+        if oficina and oficina.municipio != municipio:
+            form.add_error('oficina_comercial', 'La oficina no pertenece al municipio seleccionado')
+            return self.form_invalid(form)
+            
         return super().form_valid(form)
+
+# Agrega esta nueva vista para el endpoint AJAX
+def oficinas_por_municipio(request, municipio_id):
+    oficinas = OficinaComercial.objects.filter(
+        municipio_id=municipio_id
+    ).order_by('nombre').values('id', 'nombre')
+    
+    return JsonResponse(list(oficinas), safe=False)
 
 class ParteDiarioUpdateView(LoginRequiredMixin, UpdateView):
     model = ParteDiario
@@ -708,8 +750,11 @@ def municipios_por_provincia(request, provincia_id):
         provincia_id=provincia_id
     ).order_by('nombre').values('id', 'nombre')
     
-    return JsonResponse(
-        list(municipios), 
-        safe=False, 
-        encoder=DjangoJSONEncoder
-    )
+    return JsonResponse(list(municipios), safe=False)
+
+def oficinas_por_municipio(request, municipio_id):
+    oficinas = OficinaComercial.objects.filter(
+        municipio_id=municipio_id
+    ).order_by('nombre').values('id', 'nombre')
+    
+    return JsonResponse(list(oficinas), safe=False)

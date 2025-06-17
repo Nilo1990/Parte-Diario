@@ -41,6 +41,8 @@ urlpatterns = [
     path('municipios/nuevo/', MunicipioCreateView.as_view(), name='municipio-create'),
     path('municipios/editar/<int:pk>/', MunicipioUpdateView.as_view(), name='municipio-update'),
     path('municipios/eliminar/<int:pk>/', MunicipioDeleteView.as_view(), name='municipio-delete'),
+    path('municipios/por-provincia/<int:provincia_id>/', views.municipios_por_provincia, name='municipios-por-provincia'),
+    path('oficinas/por-municipio/<int:municipio_id>/', views.oficinas_por_municipio, name='oficinas-por-municipio'),
 
     path('provincias/', ProvinciaListView.as_view(), name='provincia-list'),
     path('provincias/nuevo/', ProvinciaCreateView.as_view(), name='provincia-create'),
@@ -52,6 +54,7 @@ urlpatterns = [
     path('partediario/editar/<int:pk>/', ParteDiarioUpdateView.as_view(), name='partediario-update'),
     path('partediario/eliminar/<int:pk>/', ParteDiarioDeleteView.as_view(), name='partediario-delete'),
     path('parte/<int:pk>/', ParteDiarioDetailView.as_view(), name='partediario-detail'),
+    path('oficinas/por-municipio/<int:municipio_id>/', views.oficinas_por_municipio, name='oficinas-por-municipio'),
     
     path('energia/', EnergiaRecuperadaListView.as_view(), name='energia-list'),
     path('energia/nuevo/', EnergiaRecuperadaCreateView.as_view(), name='energia-create'),
