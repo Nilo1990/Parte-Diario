@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from .views import (MunicipioListView, MunicipioCreateView, 
-                MunicipioUpdateView, MunicipioDeleteView,
+                MunicipioUpdateView, MunicipioDeleteView, NotificacionesListView,
                 dashboard, home_redirect, custom_logout, ProvinciaListView, ProvinciaCreateView, 
                 ProvinciaUpdateView, ProvinciaDeleteView, ParteDiarioListView, ParteDiarioCreateView,
                 ParteDiarioUpdateView, ParteDiarioDeleteView, ParteDiarioDetailView,
@@ -14,7 +14,7 @@ from .views import (MunicipioListView, MunicipioCreateView,
                 ServicioRegistroDetailView, ContactoAdminView, ContactoAdminListView, Reportes, ClientesMorososDetailView,ClientesMorososDeleteView, ClientesMorososUpdateView, ClientesMorososListView, ClientesMorososCreateView,
                 OficinaComercialListView, OficinaComercialCreateView,
     OficinaComercialUpdateView, OficinaComercialDeleteView,
-    OficinaComercialDetailView) 
+    OficinaComercialDetailView, marcar_notificacion_leida, marcar_todas_leidas) 
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
@@ -94,6 +94,10 @@ urlpatterns = [
     path('oficinas-comerciales/editar/<int:pk>/', OficinaComercialUpdateView.as_view(), name='oficinacomercial-update'),
     path('oficinas-comerciales/eliminar/<int:pk>/', OficinaComercialDeleteView.as_view(), name='oficinacomercial-delete'),
     path('municipios/por-provincia/<int:provincia_id>/', views.municipios_por_provincia, name='municipios-por-provincia'),
+          
+    path('notificaciones/', NotificacionesListView.as_view(), name='ver-notificaciones'),
+    path('notificaciones/marcar-leida/<int:pk>/', marcar_notificacion_leida, name='marcar-notificacion-leida'),
+    path('notificaciones/marcar-todas-leidas/', marcar_todas_leidas, name='marcar-todas-leidas'),
                     
 ]
 

@@ -1,3 +1,5 @@
+from django import forms
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, redirect
@@ -7,6 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from django.conf import settings
+
+
 from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro, ContactoAdministrador, ClientesMorosos, OficinaComercial
 from django.contrib import messages
 from .forms import ContactoAdminForm
@@ -14,7 +18,7 @@ from django.db.models import Sum
 
 from django.shortcuts import render
 from django.db.models import Sum, Count
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .models import Provincia, Municipio, ParteDiario, EnergiaRecuperada, Queja, ServicioRegistro
 from django.db.models import Sum
 from .models import EnergiaRecuperada, Queja, ServicioRegistro, ParteDiario
@@ -24,6 +28,11 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 
+from django.utils import timezone
+
+# from django.http import HttpResponse
+# from .pdf_utils import export_to_pdf, generate_pdf_report
+# from django.template.loader import get_template
 
 def home_redirect(request):
     """Redirige a la raíz del sistema según autenticación"""
@@ -246,24 +255,13 @@ class ParteDiarioListView(LoginRequiredMixin, ListView):
 class ParteDiarioCreateView(LoginRequiredMixin, CreateView):
     model = ParteDiario
     template_name = 'partediario/form.html'
-    fields = ['provincia', 'municipio', 'oficina_comercial']
+    fields = ['fecha', 'provincia', 'municipio', 'oficina_comercial']  # Añadido fecha
     success_url = reverse_lazy('partediario-list')
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        
-        # Siempre mostrar todas las provincias
-        form.fields['provincia'].queryset = Provincia.objects.all().order_by('nombre')
-        
-        # Deshabilitar la validación de opciones para municipio y oficina
-        form.fields['municipio'].queryset = Municipio.objects.all()
-        form.fields['oficina_comercial'].queryset = OficinaComercial.objects.all()
-        
-        # Para que no aparezcan todos los registros en el HTML
-        form.fields['municipio'].widget.attrs['data-live-search'] = 'true'
-        form.fields['oficina_comercial'].widget.attrs['data-live-search'] = 'true'
-        
-        return form
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['fecha'] = timezone.now().date()
+        return initial
 
     def form_valid(self, form):
         form.instance.usuario = self.request.user
@@ -284,8 +282,26 @@ class ParteDiarioCreateView(LoginRequiredMixin, CreateView):
         if oficina and oficina.municipio != municipio:
             form.add_error('oficina_comercial', 'La oficina no pertenece al municipio seleccionado')
             return self.form_invalid(form)
-            
-        return super().form_valid(form)
+        
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error('oficina_comercial', 'Ya existe un parte para esta oficina en la fecha seleccionada')
+            return self.form_invalid(form)
+        
+        
+    def form_invalid(self, form):
+        if 'oficina_comercial' in form.errors:
+            for error in form.errors['oficina_comercial']:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Ocultar el campo fecha y establecer valor automático
+        form.fields['fecha'].widget = forms.HiddenInput()
+        form.fields['fecha'].initial = timezone.now().date()
+        return form
 
 # Agrega esta nueva vista para el endpoint AJAX
 def oficinas_por_municipio(request, municipio_id):
@@ -527,6 +543,27 @@ def reporte_energia(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
     }
+    
+    # Exportar a PDF si se solicita
+    if 'export' in request.GET and request.GET['export'] == 'pdf':
+        # Opción 1: Usando HTML template
+        template = get_template('reportes/reporte_energia.html')
+        return export_to_pdf(template, context)
+        
+        # Opción 2: Generando PDF directamente (descomentar para usar)
+        # title = "Reporte de Energía Recuperada"
+        # headers = ['Fecha', 'Municipio', 'Plan (MWh)', 'Real (MWh)', 'Diferencia']
+        # data = [
+        #     [d['fecha'].strftime('%d/%m/%Y'), str(d['municipio']), d['plan'], d['real'], d['diferencia']] 
+        #     for d in datos_energia
+        # ]
+        # summary = {
+        #     'Total Planificado': f"{total_plan} MWh",
+        #     'Total Real': f"{total_real} MWh",
+        #     'Diferencia Total': f"{total_real - total_plan} MWh"
+        # }
+        # return generate_pdf_report(title, headers, data, summary)
+    
     return render(request, 'reportes/reporte_energia.html', context)
 
 def reporte_quejas(request):
@@ -567,6 +604,12 @@ def reporte_quejas(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
     }
+    
+    # Exportar a PDF si se solicita
+    if 'export' in request.GET and request.GET['export'] == 'pdf':
+        template = get_template('reportes/reporte_quejas.html')
+        return export_to_pdf(template, context)
+    
     return render(request, 'reportes/reporte_quejas.html', context)
 
 def reporte_servicios(request):
@@ -613,8 +656,13 @@ def reporte_servicios(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'tipo_seleccionado': tipo_servicio,
-        
     }
+    
+    # Exportar a PDF si se solicita
+    if 'export' in request.GET and request.GET['export'] == 'pdf':
+        template = get_template('reportes/reporte_servicios.html')
+        return export_to_pdf(template, context)
+    
     return render(request, 'reportes/reporte_servicios.html', context)
 
 class ClientesMorososListView(LoginRequiredMixin, ListView):
@@ -758,3 +806,37 @@ def oficinas_por_municipio(request, municipio_id):
     ).order_by('nombre').values('id', 'nombre')
     
     return JsonResponse(list(oficinas), safe=False)
+
+from django.views.generic import ListView
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from .models import Notificacion
+
+class NotificacionesListView(LoginRequiredMixin, ListView):
+    model = Notificacion
+    template_name = 'notificaciones/list.html'
+    context_object_name = 'notificaciones'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Notificacion.objects.filter(usuario=self.request.user).order_by('-fecha_creacion')
+
+@login_required
+@require_POST
+def marcar_notificacion_leida(request, pk):
+    try:
+        notificacion = Notificacion.objects.get(pk=pk, usuario=request.user)
+        notificacion.leida = True
+        notificacion.save()
+        return JsonResponse({'status': 'success'})
+    except Notificacion.DoesNotExist:
+        return JsonResponse({'status': 'error'}, status=404)
+    
+@login_required
+@require_POST
+def marcar_todas_leidas(request):
+    Notificacion.objects.filter(usuario=request.user, leida=False).update(leida=True)
+    return JsonResponse({'status': 'success'})
+
+

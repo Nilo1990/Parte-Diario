@@ -31,11 +31,15 @@ class OficinaComercial(models.Model):
         return f"{self.nombre} ({self.municipio})"
 
 class ParteDiario(models.Model):
-    fecha = models.DateField(auto_now_add=True)
+    fecha = models.DateField(default=timezone.now)  # Cambiado de auto_now_add a default
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     provincia = models.ForeignKey(Provincia, null=True, on_delete=models.CASCADE)
-    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)  # Eliminé null=True
+    municipio = models.ForeignKey(Municipio, null=True, on_delete=models.CASCADE)
     oficina_comercial = models.ForeignKey(OficinaComercial, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('fecha', 'oficina_comercial')
+        ordering = ['-fecha']
     
     def clean(self):
         super().clean()
@@ -50,6 +54,18 @@ class ParteDiario(models.Model):
             raise ValidationError({
                 'oficina_comercial': 'La oficina comercial seleccionada no pertenece al municipio elegido'
             })
+        
+        # Validar que no existe otro parte para la misma oficina en la misma fecha
+        if self.oficina_comercial and self.fecha:
+            existing_parte = ParteDiario.objects.filter(
+                fecha=self.fecha,
+                oficina_comercial=self.oficina_comercial
+            ).exclude(pk=self.pk if self.pk else None).first()
+            
+            if existing_parte:
+                raise ValidationError({
+                    'oficina_comercial': f'Ya existe un parte diario para la oficina {self.oficina_comercial} en la fecha {self.fecha.strftime("%d/%m/%Y")}'
+                })
     
     def __str__(self):
         return f"Parte {self.id} - {self.municipio} ({self.fecha})"
@@ -371,3 +387,26 @@ class HistorialMorosidad(models.Model):
     
     def __str__(self):
         return f"{self.cliente_id} - {self.nombre_cliente} ({self.get_estado_display()})"
+    
+class Notificacion(models.Model):
+    TIPO_CHOICES = [
+        ('PARTE', 'Nuevo Parte'),
+        ('MOROSO', 'Cliente Moroso'),
+        ('QUEJA', 'Nueva Queja'),
+        ('SERVICIO', 'Servicio Registrado'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notificaciones')
+    mensaje = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='PARTE')
+    leida = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    url = models.CharField(max_length=200, blank=True, null=True)
+    parte = models.ForeignKey('ParteDiario', on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-fecha_creacion']
+        verbose_name_plural = 'Notificaciones'
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} - {self.mensaje}"

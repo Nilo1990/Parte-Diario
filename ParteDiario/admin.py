@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Municipio, ParteDiario, EnergiaRecuperada, Queja, Provincia, ServicioRegistro, ContactoAdministrador,ClientesMorosos, OficinaComercial, RegistroRecaudacion, ResumenAnualRecaudacion, HistorialMorosidad
+from .models import Notificacion, Municipio, ParteDiario, EnergiaRecuperada, Queja, Provincia, ServicioRegistro, ContactoAdministrador,ClientesMorosos, OficinaComercial, RegistroRecaudacion, ResumenAnualRecaudacion, HistorialMorosidad
 
 admin.site.register(Provincia)
 admin.site.register(Municipio)
@@ -13,6 +13,7 @@ admin.site.register(OficinaComercial)
 admin.site.register(RegistroRecaudacion)
 admin.site.register(ResumenAnualRecaudacion)
 admin.site.register(HistorialMorosidad)
+admin.site.register(Notificacion)
 
 
 
